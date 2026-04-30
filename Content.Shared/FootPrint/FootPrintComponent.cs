@@ -6,13 +6,13 @@ namespace Content.Shared.FootPrint;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class FootPrintComponent : Component
 {
-    [AutoNetworkedField]
+    [AutoNetworkedField, ViewVariables]
     public EntityUid PrintOwner;
 
     [DataField]
     public string SolutionName = "step";
 
-    [DataField]
+    [DataField, ViewVariables]
     public Entity<SolutionComponent>? Solution;
 
     /// <summary>
