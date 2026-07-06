@@ -1,0 +1,18 @@
+{
+    "version": 1,
+    "license": "CC-BY-SA-3.0",
+    "copyright": " https://github.com/Marmio64/halfTaken from halflife-episode 13 atlife-episode13/blob/master/hl13/icons/mob/clothing/suit.dmi and https://github.com/Marmio64/halflife-episode13/blob/master/hl13/icons/obj/clothing/suits.dmi",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "icon"
+        },
+        {
+            "name": "equipped-OUTERCLOTHING",
+            "directions": 4
+        }
+    ]
+}

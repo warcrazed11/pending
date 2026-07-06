@@ -1,0 +1,19 @@
+# Lamda
+
+- type: entity
+  parent: ClothingOuterArmorCivilProtectionVest
+  id: ClothingOuterArmorRebelLightVest
+  name: Rebel Light Vest
+  description: Standard-issue Civil Protection armor vest designed for a basic level protection of vital organs. Appropriated by anti-citizens.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Anticitizen/rebellightvest.rsi
+
+- type: entity
+  parent: ClothingOuterArmorOTAVest
+  id: ClothingOuterArmorRebelHeavyVest
+  name: Rebel Heavy Vest
+  description: Standard-issue OTA armor vest designed for optimal protection. Appropriated by anti-citizens
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Anticitizen/rebelheavyvest.rsi

@@ -1,0 +1,17 @@
+# Almayer personnel
+- type: entity
+  parent: CMPersonalStorageBase
+  id: HL14CivilProtectionSatchel
+  name: Civil Protection Satchel
+  description: A satchel designed for use by the Combine's Civil Protection. Lower ranking units will have to go out of their way to get one, while those with more power are issued one.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Back/civilprotectionsatchel.rsi
+  - type: Storage
+    grid:
+    - 0,0,14,1 # 15
+  - type: InteractedBlacklist
+    blacklist:
+      components:
+      - Xeno
+

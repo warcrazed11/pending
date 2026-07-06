@@ -1,0 +1,185 @@
+# Civil Protection
+
+- type: entity
+  parent: [ClothingOuterBaseMedium, AllowSuitStorageClothing]
+  id: ClothingOuterArmorCivilProtectionVest
+  name: Civil Protection Armor Vest
+  description: Standard-issue Civil Protection armor vest designed for a basic level protection of vital organs
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/civilprotectionvest.rsi
+  - type: Armor 
+    modifiers:
+      coefficients:
+        Blunt: 0.70
+        Slash: 0.70
+        Piercing: 0.70 
+        Heat: 0.80
+  - type: ExplosionResistance
+    damageCoefficient: 0.90
+
+- type: entity
+  parent: [ClothingOuterArmorCivilProtectionVest]
+  id: ClothingOuterArmorCPMVest
+  name: Civil Protection "HELIX" Vest
+  description: Standard-issue Civil Protection armor vest designed for a basic level protection of vital organs. This one is colored red for "HELIX" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/helixvest.rsi
+
+- type: entity
+  parent: [ClothingOuterArmorCivilProtectionVest]
+  id: ClothingOuterArmorCivilProtectionTrench
+  name: Civil Protection Armored Trenchcoat
+  description: Standard-issue Civil Protection armor vest designed for a basic level protection of vital organs. This one comes with an attached trenchcoat.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/civilprotectiontrench.rsi
+
+
+
+- type: entity
+  parent: [ClothingOuterArmorCivilProtectionVest]
+  id: ClothingOuterArmorEPUVest
+  name: Elite Protection Unit Vest
+  description: Standard-issue Civil Protection armor vest designed for a basic level protection of vital organs. This one is colored red for Elite Protection Units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/epuvest.rsi
+
+- type: entity
+  parent: [ClothingOuterArmorCivilProtectionVest]
+  id: ClothingOuterArmorDVLTrench
+  name: Division Leader Trenchcoat
+  description: Standard-issue Civil Protection armor vest designed for a basic level protection of vital organs. This one comes with an attached trenchcoat and is colored red for Division Leaders.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/dvltrench.rsi
+
+- type: entity
+  parent: [ClothingOuterArmorCivilProtectionVest]
+  id: ClothingOuterArmorSectorialTrench
+  name: Sectorial Commander Trenchcoat
+  description: Standard-issue Civil Protection armor vest designed for a basic level protection of vital organs. This one comes with an attached trenchcoat and is colored blue for the sectorial commander.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/sectorialtrench.rsi
+
+
+#Overwatch Transhuman Arm
+
+- type: entity
+  parent: [ClothingOuterBaseMedium, AllowSuitStorageClothing]
+  id: ClothingOuterArmorOTAVest
+  name: Overwatch Transhuman Soldier Vest
+  description: Standard-issue OTA armor vest designed for optimal protection.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/otabluevest.rsi
+  - type: Armor 
+    modifiers:
+      coefficients:
+        Blunt: 0.50
+        Slash: 0.50
+        Piercing: 0.50 
+        Heat: 0.50
+  - type: ClothingSpeedModifier
+    walkModifier: 0.666
+    sprintModifier: 0.666
+  - type: ExplosionResistance
+    damageCoefficient: 0.80
+
+- type: entity
+  parent: [ClothingOuterArmorOTAVest]
+  id: ClothingOuterArmorDAGGERVest
+  name: Overwatch Transhuman "DAGGER" Vest
+  description: Standard-issue OTA armor vest designed for optimal protection. Colored red for specialized "DAGGER" units
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/daggervest.rsi
+
+- type: entity
+  parent: [ClothingOuterArmorCivilProtectionVest]
+  id: ClothingOuterArmorASSASSINVest
+  name: Overwatch Transhuman "ASSASSIN" Vest
+  description: Standard-issue OTA armor vest designed for optimal protection. Padding removed for mobile "ASSASSIN" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/assassinvest.rsi
+
+- type: entity
+  parent: [ClothingOuterArmorOTAVest]
+  id: ClothingOuterArmorELITEVest
+  name: Overwatch Transhuman "ELITE" Vest
+  description: Standard-issue OTA armor vest designed for optimal protection. Modified with special combine materials for higher padding for higher-ranked "ELITE" units
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/elitevest.rsi
+  - type: Armor 
+    modifiers:
+      coefficients:
+        Blunt: 0.40
+        Slash: 0.40
+        Piercing: 0.40 
+        Heat: 0.40
+  - type: ClothingSpeedModifier
+    walkModifier: 0.666
+    sprintModifier: 0.666
+  - type: ExplosionResistance
+    damageCoefficient: 0.70
+
+- type: entity
+  parent: [ClothingOuterArmorOTAVest]
+  id: ClothingOuterArmorWALLHAMMERVest
+  name: Overwatch Transhuman "WALLHAMMER"" Vest
+  description: Standard-issue OTA armor vest designed for optimal protection. Modified with additional padding, which offers more protection but is much heavier than standard.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/wallhammervest.rsi
+  - type: Armor 
+    modifiers:
+      coefficients:
+        Blunt: 0.30
+        Slash: 0.30
+        Piercing: 0.30 
+        Heat: 0.30
+  - type: ClothingSpeedModifier
+    walkModifier: 0.333
+    sprintModifier: 0.333
+  - type: ExplosionResistance
+    damageCoefficient: 0.50
+
+- type: entity
+  parent: [ClothingOuterArmorOTAVest]
+  id: ClothingOuterArmorSUPPRESSORVest
+  name: Overwatch Transhuman "SUPPRESSOR" Vest
+  description: Standard-issue OTA armor vest designed for optimal protection. Heavy modification for specialized "SUPPRESSOR" units.
+  components:
+  - type: SmartGunArmor
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/suppressorvest.rsi
+
+- type: entity
+  parent: ClothingOuterArmorOTAVest
+  id: ClothingOuterArmorCrematorJacket
+  name: Combine "CREMATOR" Jacket
+  description: Specialized, fire-resisting jacket for the combine's feared "CREMATOR" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Armor/Combine/crematorjacket.rsi
+  - type: Corrodible
+    isCorrodible: false
+  - type: CMArmor
+    bio: 25
+  - type: RMCImmuneToIgnition
+    immuneToDirectHits: false
+  - type: FirewalkArmor
+    whitelist:
+      components:
+      - PyroWhitelist
+    addComponentsOnFirewalk:
+    - type: RMCImmuneToFireTileDamage
+      bypassWhitelist:
+        components:
+        - RMCFireImmunityBypass
+    auraColor: "#03FCC6"

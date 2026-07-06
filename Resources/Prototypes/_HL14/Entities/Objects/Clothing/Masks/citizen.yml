@@ -1,0 +1,19 @@
+# CWU
+
+- type: entity
+  parent: [CMBaseMask]
+  id: MaskCWUTechnician
+  name: CWU technician Mask
+  description: A mask designed for members of the Civil Workers Union technical corp. Offers welding protection.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Citizen/technicalmask.rsi
+  - type: BreathMask
+  - type: IngestionBlocker
+  - type: IdentityBlocker
+  - type: EyeProtection
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - HeadTop
+    - HeadSide

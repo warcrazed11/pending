@@ -1,0 +1,28 @@
+- type: entity
+  parent: [ClothingShoesBase]
+  id: ClothingShoesBootsWorkboots
+  name: Civilian Workboots
+  description: Workboots of combine manufacture. Issued to workers and the unemployed alike.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Shoes/Boots/Citizen/workboots.rsi
+
+# CWU
+
+- type: entity
+  parent: [ClothingShoesBase]
+  id: ClothingShoesBootsCWUScience
+  name: CWU Science Workboots
+  description: Workboots of combine manufacture. Issued to CWU scientists, both those working in infestation control and xenian research.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Shoes/Boots/Citizen/cwuscienceboots.rsi
+
+- type: entity
+  parent: [ClothingShoesBase]
+  id: ClothingShoesBootsCWUTechnician
+  name: CWU Technician Workboots
+  description: Workboots of combine manufacture. Issued to CWU technicians.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Shoes/Boots/Citizen/cwutechnicianboots.rsi

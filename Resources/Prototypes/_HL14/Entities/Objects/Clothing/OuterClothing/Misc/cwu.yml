@@ -1,0 +1,61 @@
+# CWU science
+
+- type: entity
+  parent: RMCBaseBioSuit
+  id: SuitBioCWUCleanup
+  name: CWU Hazardous Bio-Remidiation Suit
+  description: A suit designed for Civil Workers Union infestation control teams.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/cwucleanupbiosuit.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/cwucleanupbiosuit.rsi
+  - type: CMHardArmor
+  - type: ClothingSpeedModifier # SLOWDOWN_ARMOR_LIGHT
+    walkModifier: 0.725
+    sprintModifier: 0.725
+  - type: RMCArmorSpeedTier
+    speedTier: light
+
+- type: entity
+  parent: RMCBaseBioSuit
+  id: SuitBioCWUScientist
+  name: CWU Xenian-Research Suit
+  description: A suit designed for Civil Workers Union science teams.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/cwuscientistbiosuit.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/cwuscientistbiosuit.rsi
+  - type: CMHardArmor
+  - type: ClothingSpeedModifier # SLOWDOWN_ARMOR_LIGHT
+    walkModifier: 0.725
+    sprintModifier: 0.725
+  - type: RMCArmorSpeedTier
+    speedTier: light
+
+#CWU Technical
+
+- type: entity
+  parent: RMCHazardVest
+  name: CWU Foreman's suit
+  id: HazardVestCWUForeman
+  description: An orange high-visibility suit worn by CWU foremen.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/foremansuit.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/foremansuit.rsi
+
+- type: entity
+  parent: RMCHazardVest
+  name: CWU Technician's suit
+  id: HazardVestCWUEngineer
+  description: A green "high-visibility" suit worn by CWU technicians.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/techniciansuit.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/OuterClothing/Misc/techniciansuit.rsi
+
+

@@ -1,0 +1,39 @@
+- type: entity
+  parent: [ ClothingHandsBase]
+  id: ClothingHandsCWUTechnician
+  name: CWU Technician Gloves
+  description: A pair of green fingerless gloves designed for use by Civil Workers Union technicians. Won't protect you from a shock!
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Hands/Gloves/Citizen/cwutechniciangloves.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/Hands/Gloves/Citizen/cwutechniciangloves.rsi
+  - type: Fiber
+    fiberColor: fibers-green
+
+- type: entity
+  parent: [ ClothingHandsBase]
+  id: ClothingHandsCWUForeman
+  name: CWU Foreman Gloves
+  description: A pair of green fingerless gloves designed for use by Civil Workers Union Foremen. Won't protect you from a shock!
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Hands/Gloves/Citizen/cwuforemangloves.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/Hands/Gloves/Citizen/cwuforemangloves.rsi
+  - type: Fiber
+    fiberColor: fibers-green
+
+- type: entity
+  parent: [ ClothingHandsBase]
+  id: ClothingHandsCWUScience
+  name: CWU Science Gloves
+  description: Blue sterile gloves designed for optimal protection in hazardous enviroments.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Hands/Gloves/Citizen/cwusciencegloves.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/Hands/Gloves/Citizen/cwusciencegloves.rsi
+  - type: Fiber
+    fiberMaterial: fibers-latex
+    fiberColor: fibers-blue

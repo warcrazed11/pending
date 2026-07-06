@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from halflife-episode 13 at https://github.com/Marmio64/halflife-episode13/blob/master/hl13/icons/obj/clothing/backpack.dmi and https://github.com/Marmio64/halflife-episode13/blob/master/hl13/icons/mob/clothing/back.dmi",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "equipped-BACKPACK",
+      "directions": 4
+    },
+    {
+      "name": "open"
+    },
+    {
+      "name": "closed"
+    }
+  ]
+}

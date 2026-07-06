@@ -1,0 +1,134 @@
+# Civil Protecion
+
+- type: entity
+  parent: [CMBaseMask, CMUBaseGasMaskFilterSlot]
+  id: GasMaskCivilProtection
+  name: Civil Protection Gas Mask
+  description: A standard-issue civil protection gas mask
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/civilprotectionmask.rsi
+  - type: BreathMask
+  - type: IngestionBlocker
+  - type: IdentityBlocker
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - HeadTop
+    - HeadSide
+
+- type: entity
+  parent: [GasMaskCivilProtection]
+  id: GasMaskCPM
+  name: Civil Protection "HELIX"" Gasmask
+  description: A standard-issue gas mask for "HELIX". Only differs from the base model in the yellow lense color.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/helixmask.rsi
+
+- type: entity
+  parent: [GasMaskCivilProtection]
+  id: GasMaskEPU
+  name: Elite Protection Unit Gasmask
+  description: A standard-issue Elite Protectin Unit Gas mask. Only differs from the base model in the green lense color.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/epumask.rsi
+
+- type: entity
+  parent: [GasMaskCivilProtection]
+  id: GasMaskDVL
+  name: Division Leader Gasmask
+  description: A standard-issue gas mask for Division Leaders. Not much different from the standard gas mask.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/dvlmask.rsi
+
+- type: entity
+  parent: [GasMaskCivilProtection]
+  id: GasMaskSCT
+  name: Sectorial Commander Gasmask
+  description: A standard-issue gas mask for the head honcho. Far more complex than lesser models, and a true sign of trust from the benefactors, for somebody retaining their faculties.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/sectorialmask.rsi
+
+
+#Overwatch Transhuman Arm
+
+- type: entity
+  parent: [CMBaseMask, CMUBaseGasMaskFilterSlot]
+  id: GasMaskOTA
+  name: Overwatch Transhuman Soldier Gasmask
+  description: Standard-issue gasmask of the Overwatch Transhuman Arm.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/otaechomask.rsi
+  - type: BreathMask
+  - type: IngestionBlocker
+  - type: IdentityBlocker
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - HeadTop
+    - HeadSide
+
+- type: entity
+  parent: [GasMaskOTA]
+  id: GasMaskDagger
+  name: Overwatch Transhuman "DAGGER" Gasmask
+  description: Standard-issue gasmask of the Overwatch Transhuman Arm. Colored red for "DAGGER" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/otadaggermask.rsi
+
+- type: entity
+  parent: [GasMaskOTA]
+  id: GasMaskGrunt
+  name: Overwatch Transhuman "GRUNT" Gasmask
+  description: Standard-issue gasmask of the Overwatch Transhuman Arm. Modified for lower-ranked "grunt" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/otagruntmask.rsi
+
+- type: entity
+  parent: [GasMaskOTA]
+  id: GasMaskElite
+  name: Overwatch Transhuman "ELITE" Gasmask
+  description: Standard-issue gasmask of the Overwatch Transhuman Arm. Modified for higher-ranked "ELITE" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/otaelitemask.rsi
+
+- type: entity
+  parent: [GasMaskOTA]
+  id: GasMaskWallhammer
+  name: Overwatch Transhuman "WALLHAMMER" Gasmask
+  description: Standard-issue gasmask of the Overwatch Transhuman Arm. Modified for specialized "WALLHAMMER" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/otawallhammermask.rsi
+
+- type: entity
+  parent: [GasMaskOTA]
+  id: GasMasksuppressor
+  name: Overwatch Transhuman "SUPPRESSOR" Gasmask
+  description: Standard-issue gasmask of the Overwatch Transhuman Arm. Modified for specialized "SUPPRESSOR" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/otasuppressor.rsi
+
+- type: entity
+  parent: GasMaskOTA
+  id: GasMaskcremator
+  name: Cremator Mask
+  description: Standard-issue gasmask of the Combine's "CREMATOR" units.
+  components:
+  - type: Corrodible
+    isCorrodible: false
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Masks/Combine/crematormask.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/Masks/Combine/crematormask.rsi
+  - type: TemperatureProtection
+    heatingCoefficient: 0.001

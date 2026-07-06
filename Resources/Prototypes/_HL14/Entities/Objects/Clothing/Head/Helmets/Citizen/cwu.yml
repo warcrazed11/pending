@@ -1,0 +1,33 @@
+#Science
+
+- type: entity
+  parent: ClothingHeadBase
+  id: HoodBioCWUCleanup
+  name: CWU Hazardous Bio-Remidiation Hood
+  description: A hood designed for Civil Workers Union infestation control teams.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Head/Helmets/Citizen/cwucleanuphelmet.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/Head/Helmets/Citizen/cwucleanuphelmet.rsi
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - HeadTop
+    - HeadSide
+  - type: CMArmor
+    bio: 100 # CLOTHING_ARMOR_HARDCORE
+    # armor_rad = 20
+    # armor_internaldamage = 10
+
+- type: entity
+  parent: HoodBioCWUCleanup
+  id: HoodBioCWUScientist
+  name: CWU Xenian-Research Hood
+  description:  A hood designed for Civil Workers Union science teams.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Clothing/Head/Helmets/Citizen/cwusciencehelmet.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Clothing/Head/Helmets/Citizen/cwusciencehelmet.rsi
+
