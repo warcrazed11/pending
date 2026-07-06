@@ -12,7 +12,7 @@
   - type: IngestionBlocker
   - type: IdentityBlocker
   - type: HideLayerClothing
-    Layers:
+    Slots:
      Hair: Mask
      HeadTop: Mask
      HeadSide: Mask
