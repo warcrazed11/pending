@@ -12,10 +12,10 @@
   - type: IngestionBlocker
   - type: IdentityBlocker
   - type: HideLayerClothing
-    Slots:
-     Hair: Mask
-     HeadTop: Mask
-     HeadSide: Mask
+    slots:
+    - Hair
+    - HeadTop
+    - HeadSide
 
 - type: entity
   parent: [GasMaskCivilProtection]
@@ -68,7 +68,7 @@
   - type: IngestionBlocker
   - type: IdentityBlocker
   - type: HideLayerClothing
-    Slots:
+    slots:
     - Hair
     - HeadTop
     - HeadSide
