@@ -1,0 +1,165 @@
+- type: entity
+  parent: [ RMCBaseSlideMagazineVisuals, CMWeaponPistolBase ]
+  id: HL14WeaponPistolUSP9mm
+  name: USP Match 9mm
+  description: Standard issue side-arm of the Civil Protection. A Combine reproduction of the USP Match chambered in 9x19mm. 
+  components:
+  - type: Gun
+    soundGunshot:
+     path: /Audio/_HL14/Weapons/Guns/Gunshots/usp_fire.ogg
+  - type: Tag
+    tags:
+    - Sidearm
+    - HL14USP
+  - type: RMCSelectiveFire
+    scatterWielded: 10
+    scatterUnwielded: 10
+    baseFireRate: 10
+    burstScatterMult: 5
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Pistols/uspmatch.rsi
+  - type: Clothing
+    sprite: _HL13/Objects/Weapons/Guns/Pistols/uspmatch.rsi
+  - type: RMCWeaponAccuracy
+    accuracyMultiplier: 1.2
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/_RMC14/Weapons/Guns/Reload/gun_mk80_reload.ogg
+        ejectSound: /Audio/_HL14/Weapons/Guns/Reload/slidelock_alyx.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - HL14MagazinePistolUSP
+          - HL14MagazinePistolUSPAP
+          - HL14MagazinePistolUSPRubber
+        startingItem: HLMagazinePistolUSP
+  - type: AttachableHolder
+    slots:
+      rmc-aslot-barrel:
+        whitelist:
+          tags:
+          - RMCAttachmentBarrelCharger
+          - RMCAttachmentExtendedBarrel
+          - RMCAttachmentRecoilCompensator
+          - RMCAttachmentSuppressor
+          - RMCAttachmentSuppressorCompact
+      rmc-aslot-rail:
+        whitelist:
+          tags:
+          - RMCAttachmentRailFlashlight
+          - RMCAttachmentS5RedDotSight
+          - RMCAttachmentS5MicroRedDotSight
+          - RMCAttachmentS6ReflexSight
+      rmc-aslot-underbarrel:
+        whitelist:
+          tags:
+          - RMCAttachmentBurstFireAssembly
+          - RMCAttachmentLaserSight
+  - type: AttachableHolderVisuals
+    offsets:
+      rmc-aslot-barrel: 0.71, 0.095
+      rmc-aslot-rail: -0.065, 0.125
+      rmc-aslot-underbarrel: 0.312, -0.25
+
+- type: entity
+  parent: HL14WeaponPistolUSP9mm
+  id: HL14WeaponPistolUSP9mmEmpty
+  suffix: Empty
+  components:
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/_RMC14/Weapons/Guns/Reload/gun_mk80_reload.ogg
+        ejectSound: /Audio/_RMC14/Weapons/Guns/Reload/gun_88m4_unload.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - HL14MagazinePistolUSP
+          - HL14MagazinePistolUSPAP
+
+#9mm
+- type: entity
+  parent: CMBaseMagazinePistol
+  id: HLMagazinePistolUSP
+  name: USP Match magazine (9mm)
+  components:
+  - type: Tag
+    tags:
+    - CMMagazinePistol
+    - HL14MagazinePistolUSP
+  - type: BallisticAmmoProvider
+    mayTransfer: True
+    whitelist:
+      tags:
+      - CMCartridgePistol9mm
+    proto: CMCartridgePistol9mm
+    capacity: 18
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Ammunition/Magazines/uspmagazine.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: MagazineVisuals
+    magState: mag
+
+#9mmAP
+- type: entity
+  parent: HLMagazinePistolUSP
+  id: HLMagazinePistolUSPAP
+  name: USP Match AP magazine (9mm)
+  description: A pistol magazine. This one contains armor-piercing bullets, which have noticeably higher stopping power on well-armored targets, and noticeably less on unarmored or lightly-armored targets.
+  components:
+  - type: Tag
+    tags:
+    - CMMagazinePistol
+    - HL14MagazinePistolUSPAP
+  - type: BallisticAmmoProvider
+    whitelist:
+      tags:
+      - CMCartridgePistol9mmAP
+    proto: CMCartridgePistolM77AP
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Ammunition/Magazines/uspmagazine.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+    - state: ammo_band
+      color: "#1F951F"
+  - type: MagazineVisuals
+    magState: mag
+
+#9mm HP
+- type: entity
+  parent: HLMagazinePistolUSP
+  id: HLMagazinePistolUSPHP
+  name: USP Match hollowpoint magazine (9mm)
+  description: A hollow-point 9mm pistol magazine for the USP Match. These hollow-point bullets have noticeably higher stopping power on unarmored targets, and noticeably less on armored targets.
+  components:
+  - type: BallisticAmmoProvider
+    whitelist:
+      tags:
+      - CMMagazinePistol
+      - RMCCartridgePistol9mmHP
+    proto: RMCCartridgePistol9mmHP
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Ammunition/Magazines/uspmagazine.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+    - state: ammo_band
+      color: "#BA5D00"
+
+
+
+
+
+

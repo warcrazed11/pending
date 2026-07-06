@@ -1,0 +1,29 @@
+﻿- type: entity
+  parent: [ RMCBaseWeaponShotgun, RMCBaseAttachableHolder ]
+  name: Combine Heavy Shotgun
+  id: HL14WeaponShotgunHeavyShotgun
+  description: A combine shotgun designed to be handled by elite "WALLHAMMER" units.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Shotguns/heavyshotgun.rsi
+  - type: Gun
+    shotsPerBurst: 1
+    soundGunshot:
+      path: /Audio/_HL14/Weapons/Guns/Gunshots/heavyshotgun_fire.ogg
+  - type: ShootUseDelay
+  - type: RMCSelectiveFire
+    baseFireModes:
+    - SemiAuto
+    recoilWielded: 2
+    recoilUnwielded: 4
+    scatterWielded: 5
+    scatterUnwielded: 10
+    baseFireRate: 0.7
+    burstScatterMult: 5
+  - type: BallisticAmmoProvider
+    cycleable: false
+    whitelist:
+      tags:
+      - HL14ShellShotgunHeavy
+    capacity: 8
+

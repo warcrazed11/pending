@@ -1,0 +1,164 @@
+﻿- type: entity
+  parent: [ CMBaseWeaponGun, BaseItem, RMCBaseAttachableHolder ]
+  id:  HL14WeaponMachineGunPulselmg
+  name: Pulse LMG
+  description: A deadly firearm wielded by Combine "SUPPRESSOR" units.
+  components:
+  - type: Wieldable
+  - type: Item
+    size: Huge
+  - type: AmmoCounter
+  - type: MagazineAmmoProvider
+    autoEject: true
+  - type: RMCAmmoEject
+  - type: MagazineVisuals
+    magState: mag
+    steps: 1
+    zeroVisible: true
+  - type: Appearance
+  - type: RMCNameItemOnVend
+    item: PrimaryGun
+  - type: GunRequiresWield
+  - type: Corrodible
+    isCorrodible: false
+  - type: GunIFF
+    enabled: true
+  - type: WieldDelay
+    baseDelay: 0.4
+  - type: WieldableSpeedModifiers
+    base: 0.5
+    light: 0.69
+    medium: 0.75
+    heavy: 0.806
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/MachineGuns/pulselmg.rsi
+    layers:
+    - state: base
+      sprite: _HL13/Objects/Weapons/Guns/MachineGuns/pulselmg.rsi
+    - state: mag-0
+      sprite: _HL13/Objects/Weapons/Guns/MachineGuns/pulselmg.rsi
+      map: [ "enum.GunVisualLayers.Mag" ]
+  - type: Clothing
+    sprite: _RMC14/Objects/Weapons/Guns/SmartGuns/ml66a.rsi # Use the CM13 smartgun sprite for now, they look similar, anyway.
+    slots:
+    - suitStorage
+    - Back
+  - type: MeleeWeapon
+    damage:
+      types:
+        Blunt: 20
+  - type: Gun
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    soundGunshot:
+     path: /Audio/_HL14/Weapons/Guns/Gunshots/pulselmg_fire.ogg
+    soundEmpty:
+      path: /Audio/Weapons/Guns/Empty/lmg_empty.ogg
+  - type: RMCSelectiveFire
+    baseFireModes:
+    - FullAuto
+    recoilWielded: 3
+    scatterWielded: 10
+    baseFireRate: 12
+    burstScatterMult: 4
+    modifiers:
+      FullAuto:
+        maxScatterModifier: 4
+        useBurstScatterMult: true
+        unwieldedScatterMultiplier: 2
+        shotsToMaxScatter: 80
+  - type: RMCWeaponAccuracy
+    accuracyMultiplier: 1.05
+  - type: ContainerContainer
+    containers:
+      gun_magazine: !type:ContainerSlot
+      gun_chamber: !type:ContainerSlot { }
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        startingItem: HLMagazinePulselmg
+        insertSound: /Audio/_HL14/Weapons/Guns/Reload/ar2_load.ogg
+        ejectSound: /Audio/_HL14/Weapons/Guns/Reload/ar2_unload.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - HLMagazinePulselmg
+  - type: GunDamageModifier
+    multiplier: 1
+  - type: GunToggleableAmmo
+    settings:
+    - damage:
+        types:
+          Piercing: 30
+      armorPiercing: 0
+      name: rmc-toggleable-ammo-highly-precise
+      icon:
+        sprite: _RMC14/Actions/marine_smart_gun_actions.rsi
+        state: ammo_swap_normal
+    - damage:
+        types:
+          Piercing: 20
+      armorPiercing: 40
+      name: rmc-toggleable-ammo-armor-shredding
+      icon:
+        sprite: _RMC14/Actions/marine_smart_gun_actions.rsi
+        state: ammo_swap_ap
+  - type: RMCMagneticItem
+  - type: GunRequiresSkills
+    skills:
+      RMCSkillSmartGun: 1
+  - type: GunSkilledRecoil
+    skills:
+      RMCSkillFirearms: 100
+  - type: GunRequireEquipped
+    whitelist:
+      components:
+      - SmartGunArmor
+  - type: GunToggleableRecoil
+  - type: GunToggleableAutoFire
+  - type: ToggleableMotionDetector
+  - type: IFFToggle
+  - type: MotionDetector
+    handToggleable: false
+    deactivateOnDrop: false
+    toggleSound: null
+  - type: SmartGun
+  - type: AttachableHolder
+    slots:
+      rmc-aslot-rail:
+        whitelist:
+          tags:
+          - RMCAttachmentRailFlashlight
+  - type: AttachableHolderVisuals
+    offsets:
+      rmc-aslot-rail: -0.1875, 0.125
+  - type: WieldedCrosshair
+    rsi:
+      sprite: _RMC14/Interface/MousePointer/smartgun_mouse.rsi
+      state: all
+
+- type: entity
+  parent: CMMagazineRifleBase
+  id: HLMagazinePulselmg
+  name: "Pulse LMG Magazine(10x30mm)"
+  components:
+  - type: Tag
+    tags:
+    - HLMagazinePulselmg
+  - type: BallisticAmmoProvider
+    whitelist:
+      tags:
+      - CMCartridgeSmartGun10x30mm
+    proto: CMCartridgeSmartGun10x30mm
+    capacity: 120
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Ammunition/Magazines/pulsemagazine.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: RefillableByBulletBox
+    bulletType: RMCBoxBulletsSmartGun

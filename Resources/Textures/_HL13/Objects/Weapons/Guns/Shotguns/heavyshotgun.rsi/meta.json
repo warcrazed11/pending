@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from Half Life Episode-13 at https://github.com/Marmio64/halflife-episode13/blob/master/hl13/icons/mob/inhands/guns_righthand.dmi, https://github.com/Marmio64/halflife-episode13/blob/master/hl13/icons/mob/inhands/items_lefthand.dmi, and https://github.com/Marmio64/halflife-episode13/blob/master/hl13/icons/obj/guns/projectile.dmi",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "wielded-inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "inhand-left",
+      "directions": 4
+    },
+    {
+      "name": "wielded-inhand-right",
+      "directions": 4
+    },
+    {
+      "name": "inhand-right",
+      "directions": 4
+    },
+    {
+      "name": "base"
+    }
+  ]
+}

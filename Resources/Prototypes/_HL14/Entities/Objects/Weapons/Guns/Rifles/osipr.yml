@@ -1,0 +1,115 @@
+﻿- type: entity
+  parent: [ CMBaseWeaponRifle, RMCBaseWeaponMagazineVisuals ]
+  name: OSIPR "AR2" 
+  id: HL14WeaponRifleOSIPR
+  description: An older design of the Pulse Rifle commonly used by the Marine Corps. Uses 10x24mm caseless ammunition.
+  components:
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Rifles/osipr.rsi
+    layers:
+    - state: base
+      map: [ "enum.GunVisualLayers.Base" ]
+    - state: mag-0
+      map: [ "enum.GunVisualLayers.Mag" ]
+  - type: Clothing
+    sprite: _HL13/Objects/Weapons/Guns/Rifles/osipr.rsi
+  - type: ContainerContainer
+    containers:
+      gun_magazine: !type:ContainerSlot
+      gun_chamber: !type:ContainerSlot
+  - type: Gun
+    selectedMode: FullAuto
+    availableModes:
+    - SemiAuto
+    - Burst
+    - FullAuto
+    soundGunshot:
+     path: /Audio/_HL14/Weapons/Guns/Gunshots/ar2_fire.ogg
+    shotsPerBurst: 4
+  - type: RMCSelectiveFire
+    baseFireModes:
+    - SemiAuto
+    - Burst
+    - FullAuto
+    recoilUnwielded: 4
+    scatterWielded: 4
+    scatterUnwielded: 20
+    baseFireRate: 6
+    burstScatterMult: 1
+    modifiers:
+      Burst:
+        fireDelay: 0.1665
+        maxScatterModifier: 10
+        useBurstScatterMult: true
+        unwieldedScatterMultiplier: 2
+        shotsToMaxScatter: 6
+      FullAuto:
+        fireDelay: 0
+        maxScatterModifier: 13
+        useBurstScatterMult: true
+        unwieldedScatterMultiplier: 2
+        shotsToMaxScatter: 4
+  - type: RMCWeaponAccuracy
+    accuracyMultiplier: 1.15
+    accuracyMultiplierUnwielded: 0.65
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/_HL14/Weapons/Guns/Reload/ar2_load.ogg
+        ejectSound: /Audio/_HL14/Weapons/Guns/Reload/ar2_unload.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - HLMagazineOSIPR
+        startingItem: HLMagazineOSIPR
+  - type: GunDamageModifier
+    multiplier: 1.1
+  - type: Tag
+    tags:
+    - HL14WeaponRifleOSIPR
+
+- type: entity
+  parent: HL14WeaponRifleOSIPR
+  id: HL14WeaponRifleOSIPRUnloaded
+  suffix: Unloaded
+  components:
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/_HL14/Weapons/Guns/Reload/ar2_load.ogg
+        ejectSound: /Audio/_HL14/Weapons/Guns/Reload/ar2_unload.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - HLMagazineOSIPR
+        startingItem: null
+
+- type: entity
+  parent: CMMagazineRifleBase
+  id: HLMagazineOSIPR
+  name: "OSIPR magazine (10x24mm)"
+  components:
+  - type: Tag
+    tags:
+    - CMMagazineRifle
+    - HLMagazineOSIPR
+  - type: BallisticAmmoProvider
+    mayTransfer: True
+    whitelist:
+      tags:
+      - CMCartridgeRifle10x24mm
+    proto: CMCartridgeRifle10x24mm
+    capacity: 30
+  - type: Sprite
+    sprite: _HL13/Objects/Weapons/Guns/Ammunition/Magazines/pulsemagazine.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: Appearance
+  - type: RefillableByBulletBox
+    bulletType: RMCBoxBulletsRifle
+
