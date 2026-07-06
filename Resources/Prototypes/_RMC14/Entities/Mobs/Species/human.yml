@@ -5,11 +5,20 @@
   name: Urist C.M. McHands
   suffix: RMC14
   components:
+  - type: FlareStomper
   - type: Vocal
     sounds:
       Male: RMCMaleHuman
       Unsexed: RMCMaleHuman #sorry fem-leaning enbies
       Female: RMCFemaleHuman
+  - type: EmoteOnDamage
+    emotes:
+    - Scream
+    emoteChance: 1
+    damageThreshold: 5
+    emoteCooldown: 6
+    withChat: true
+    hiddenFromChatWindow: true
   - type: FixedIdentity
     name: cm-chatsan-replacement-human
   - type: CMUHumanMedical
@@ -49,3 +58,6 @@
         type: BodyPartPickerBui
       enum.CMUSurgeryUIKey.Key:
         type: CMUSurgeryBui
+      enum.CMUMedicalFieldCraftingUI.Key:
+        type: CMUMedicalFieldCraftingBui
+        requireInputValidation: false

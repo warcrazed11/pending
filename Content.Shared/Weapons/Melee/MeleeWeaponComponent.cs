@@ -106,6 +106,13 @@ public sealed partial class MeleeWeaponComponent : Component
     [DataField, AutoNetworkedField]
     public Angle Angle = Angle.FromDegrees(60);
 
+    /// <summary>
+    /// Per-weapon override for maximum wide attack targets.
+    /// If null, uses the global CVar value.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public int? MaxTargets;
+
     [DataField, AutoNetworkedField]
     public EntProtoId Animation = "WeaponArcPunch";
 
@@ -149,6 +156,10 @@ public sealed partial class MeleeWeaponComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     [DataField("soundNoDamage"), AutoNetworkedField]
     public SoundSpecifier NoDamageSound { get; set; } = new SoundCollectionSpecifier("WeakHit");
+
+    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField("soundHitNonLiving"), AutoNetworkedField]
+    public SoundSpecifier? HitNonLivingSound;
 
     /// <summary>
     /// If true, the weapon must be equipped for it to be used.

@@ -137,6 +137,12 @@
     heldPrefix: wood
     size: Normal
   - type: Appearance
+  - type: Flamability
+    chance: 1.0
+    rate: 0.4
+    range: 0.8
+    spread: 0.8
+    destroyAnyway: true
   - type: Tag
     tags:
     - Sheet
@@ -153,7 +159,9 @@
     - AU14WoodenCrossBuild
     - AU14WoodenSandalsBuild
     # wooden door
-    # coffin
+    - AU14CoffinBuild
+    - AU14WoodenTableBuild
+    - AU14FancyWoodenTableBuild
     # wooden pole
   - type: UserInterface
     interfaces:

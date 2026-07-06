@@ -45,6 +45,7 @@ using Content.Shared.Storage.EntitySystems;
 using Content.Shared.Storage;
 using Content.Shared._RMC14.Cryostorage;
 using Content.Shared.AU14.Objectives;
+using Content.Shared._AU14.Vendors;
 
 namespace Content.Shared._RMC14.Vendors;
 
@@ -580,6 +581,34 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
             }
         }
 
+        if (section.SharedJOLimit is { } joLimit) // CMU14 JO limit
+        {
+            if (!TryComp<AU14VendorJOComponent>(vendor, out var thisJOVendor))
+                return;
+
+            // Get every AU14VendorJO
+            var joVendors = EntityQueryEnumerator<AU14VendorJOComponent>();
+            var totalSectionVends = 0;
+
+            // Goes through each AU14VendorJO and gets the value for this kit type.
+            while (joVendors.MoveNext(out _, out var joVendor))
+                foreach (var vendEntry in section.Entries)
+                    if (joVendor.GlobalSharedVends.TryGetValue(vendEntry.Id, out var count))
+                        totalSectionVends += count;
+
+            if (totalSectionVends >= joLimit)
+            {
+                ResetChoices();
+                _popup.PopupEntity(Loc.GetString("au14-vending-machine-jo-max"), vendor.Owner, actor);
+                return;
+            }
+
+            var entryId = section.Entries[args.Entry].Id;
+            var current = thisJOVendor.GlobalSharedVends.GetValueOrDefault(entryId);
+            thisJOVendor.GlobalSharedVends[entryId] = current + 1;
+            Dirty(vendor, thisJOVendor);
+        }
+
         if (entry.Points != null)
         {
             if (vendor.Comp.UseObjectivePoints)
@@ -704,7 +733,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         for (var i = 0; i < entry.Spawn; i++)
         {
             var offset = _random.NextVector2Box(min.X, min.Y, max.X, max.Y);
-            if (entity.TryGetComponent(out CMVendorBundleComponent? bundle, _compFactory))
+            if (entity.TryComp(out CMVendorBundleComponent? bundle, _compFactory))
             {
                 foreach (var bundled in bundle.Bundle)
                 {
@@ -717,7 +746,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
             }
         }
 
-        if (entity.TryGetComponent(out CMChangeUserOnVendComponent? change, _compFactory) &&
+        if (entity.TryComp(out CMChangeUserOnVendComponent? change, _compFactory) &&
             change.AddComponents != null)
         {
             EntityManager.AddComponents(actor, change.AddComponents);
@@ -726,7 +755,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
     private void Vend(EntityUid vendor, EntityUid player, EntProtoId toVend, Vector2 offset, SlotFlags? replaceSlot = null)
     {
-        if (_prototypes.Index(toVend).TryGetComponent(out CMVendorMapToSquadComponent? mapTo, _compFactory))
+        if (_prototypes.Index(toVend).TryComp(out CMVendorMapToSquadComponent? mapTo, _compFactory))
         {
             if (TryComp(player, out SquadMemberComponent? member) &&
                 member.Squad is { } squad &&
@@ -893,7 +922,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         if (entry.BoxSlots is not { } boxSlots)
         {
             if (!_prototypes.TryIndex(entry.Id, out var boxProto) ||
-                !boxProto.TryGetComponent(out CMItemSlotsComponent? slots, _compFactory) ||
+                !boxProto.TryComp(out CMItemSlotsComponent? slots, _compFactory) ||
                 slots.Count is not { } count)
             {
                 return 1;

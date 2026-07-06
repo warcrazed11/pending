@@ -1,53 +1,48 @@
-using Content.Server.Atmos.Components;
-using Content.Shared.Inventory;
+using System.Numerics;
+using Content.Server.Decals;
+using Content.Shared.Decals;
+using Content.Shared.FootPrint;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
-using Content.Shared.FootPrint;
 using Content.Shared._RMC14.Xenonids.Weeds;
-using Content.Shared.Chemistry.Components.SolutionManager;
-using Content.Shared.Chemistry.EntitySystems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Content.Server.FootPrint;
 
 public sealed partial class FootPrintsSystem : EntitySystem
 {
+    [Dependency] private DecalSystem _decals = default!;
+    [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private InventorySystem _inventory = default!;
-    [Dependency] private IMapManager _map = default!;
-    [Dependency] private SharedMapSystem _mapSystem = default!;
-    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private SharedXenoWeedsSystem _weeds = default!;
 
-    [Dependency] private SharedSolutionContainerSystem _solution = default!;
-    [Dependency] private SharedAppearanceSystem _appearance = default!;
-    [Dependency] private SharedTransformSystem _transform = default!;
-
-    private EntityQuery<TransformComponent> _transformQuery;
-    private EntityQuery<MobThresholdsComponent> _mobThresholdQuery;
-    private EntityQuery<AppearanceComponent> _appearanceQuery;
+    private EntityQuery<DecalGridComponent> _decalGridQuery;
     private EntityQuery<MapGridComponent> _gridQuery;
+    private EntityQuery<MobThresholdsComponent> _mobThresholdQuery;
+    private EntityQuery<TransformComponent> _transformQuery;
 
-    // Cap how many Footstep entities can coexist on a single tile. Heavy traffic
-    // areas (e.g. blood-soaked corridors) used to spawn unbounded entities and tank server perf.
+    // Cap how many footprint decals can coexist on a single tile.
     private const int MaxFootprintsPerTile = 8;
+    private static readonly Vector2 DecalCenterOffset = new(-0.5f, -0.5f);
+    private static readonly Angle DraggingRotationOffset = Angle.FromDegrees(-90f);
+    private static readonly Angle StepRotationOffset = Angle.FromDegrees(180f);
 
-    // Multiplier applied to a footprint's alpha when it is placed on, or covered by, xeno weeds —
+    // Multiplier applied to a footprint's alpha when it is placed on xeno weeds;
     // keeps the weeds underneath visible.
     public const float WeedAlphaMultiplier = 0.3f;
-
-    private readonly HashSet<Entity<FootPrintComponent>> _footprintsInTile = new();
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _transformQuery = GetEntityQuery<TransformComponent>();
-        _mobThresholdQuery = GetEntityQuery<MobThresholdsComponent>();
-        _appearanceQuery = GetEntityQuery<AppearanceComponent>();
+        _decalGridQuery = GetEntityQuery<DecalGridComponent>();
         _gridQuery = GetEntityQuery<MapGridComponent>();
+        _mobThresholdQuery = GetEntityQuery<MobThresholdsComponent>();
+        _transformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<FootPrintsComponent, ComponentStartup>(OnStartupComponent);
         SubscribeLocalEvent<FootPrintsComponent, MoveEvent>(OnMove);
@@ -67,90 +62,178 @@ public sealed partial class FootPrintsSystem : EntitySystem
             return;
 
         var dragging = mobThreshHolds.CurrentThresholdState is MobState.Critical or MobState.Dead;
-        var distance = (transform.LocalPosition - component.StepPos).Length();
+        var stepDelta = transform.LocalPosition - component.StepPos;
         var stepSize = dragging ? component.DragSize : component.StepSize;
 
-        if (!(distance > stepSize))
+        if (stepDelta.LengthSquared() <= stepSize * stepSize)
             return;
+
+        if (dragging && component.DraggingDecals.Count == 0)
+        {
+            component.StepPos = transform.LocalPosition;
+            return;
+        }
 
         component.RightStep = !component.RightStep;
 
         var spawnCoords = CalcCoords(gridUid, component, transform, dragging);
+        MapGridComponent? gridComp = null;
+        _gridQuery.TryComp(gridUid, out gridComp);
 
-        // Bail if this tile has already hit the per-tile footprint cap.
-        if (_gridQuery.TryComp(gridUid, out var gridComp))
+        if (!dragging)
         {
-            var tile = _mapSystem.CoordinatesToTile(gridUid, gridComp, spawnCoords);
-            _footprintsInTile.Clear();
-            _lookup.GetLocalEntitiesIntersecting(gridUid, tile, _footprintsInTile, gridComp: gridComp);
-            if (_footprintsInTile.Count >= MaxFootprintsPerTile)
+            if (IsFootprintTileAtCap(gridUid, spawnCoords, component, gridComp, draggingOnly: false))
                 return;
+
+            SpawnStepFootprintDecal(component, transform, gridUid, spawnCoords, gridComp);
+            component.StepPos = transform.LocalPosition;
+            return;
         }
 
-        var entity = Spawn(component.StepProtoId, spawnCoords);
-        var footPrintComponent = EnsureComp<FootPrintComponent>(entity);
+        if (IsFootprintTileAtCap(gridUid, spawnCoords, component, gridComp, draggingOnly: true))
+            return;
 
-        footPrintComponent.PrintOwner = uid;
+        var stepColor = GetFootprintColor(component, gridUid, spawnCoords, gridComp);
 
-        // Dim the footprint if the tile already has weeds, so the weeds remain visible.
+        var rotation = stepDelta.ToAngle() + DraggingRotationOffset;
+        _decals.TryAddDecal(
+            _random.Pick(component.DraggingDecals),
+            spawnCoords.Offset(DecalCenterOffset),
+            out _,
+            stepColor,
+            rotation,
+            cleanable: true);
+
+        FadePrintColor(component);
+        component.StepPos = transform.LocalPosition;
+    }
+
+    private void SpawnStepFootprintDecal(
+        FootPrintsComponent component,
+        TransformComponent transform,
+        EntityUid gridUid,
+        EntityCoordinates spawnCoords,
+        MapGridComponent? gridComp)
+    {
+        _decals.TryAddDecal(
+            PickStepDecal(component),
+            spawnCoords.Offset(DecalCenterOffset),
+            out _,
+            GetFootprintColor(component, gridUid, spawnCoords, gridComp),
+            transform.LocalRotation + StepRotationOffset,
+            cleanable: true);
+
+        FadePrintColor(component);
+    }
+
+    private Color GetFootprintColor(
+        FootPrintsComponent component,
+        EntityUid gridUid,
+        EntityCoordinates spawnCoords,
+        MapGridComponent? gridComp)
+    {
         var stepColor = component.PrintsColor;
         if (gridComp != null && _weeds.IsOnWeeds((gridUid, gridComp), spawnCoords))
-        {
-            stepColor = stepColor.WithAlpha(stepColor.A * WeedAlphaMultiplier);
-            footPrintComponent.DimmedByWeeds = true;
-        }
+            return stepColor.WithAlpha(stepColor.A * WeedAlphaMultiplier);
 
-        Dirty(entity, footPrintComponent);
-
-        if (_appearanceQuery.TryComp(entity, out var appearance))
-        {
-            _appearance.SetData(entity, FootPrintVisualState.State, PickState(uid, dragging), appearance);
-            _appearance.SetData(entity, FootPrintVisualState.Color, stepColor, appearance);
-        }
-
-        if (!_transformQuery.TryComp(entity, out var stepTransform))
-            return;
-
-        stepTransform.LocalRotation = dragging
-            ? (transform.LocalPosition - component.StepPos).ToAngle() + Angle.FromDegrees(-90f)
-            : transform.LocalRotation + Angle.FromDegrees(180f);
-
-        component.PrintsColor = component.PrintsColor.WithAlpha(Math.Max(0f, component.PrintsColor.A - component.ColorReduceAlpha));
-        component.StepPos = transform.LocalPosition;
-
-        if (!TryComp<SolutionContainerManagerComponent>(entity, out var solutionContainer)
-            || !_solution.ResolveSolution((entity, solutionContainer), footPrintComponent.SolutionName, ref footPrintComponent.Solution, out var solution)
-            || string.IsNullOrWhiteSpace(component.ReagentToTransfer) || solution.Volume >= 1)
-            return;
-
-        _solution.TryAddReagent(footPrintComponent.Solution.Value, component.ReagentToTransfer, 1, out _);
+        return stepColor;
     }
 
-    private EntityCoordinates CalcCoords(EntityUid uid, FootPrintsComponent component, TransformComponent transform, bool state)
+    private static void FadePrintColor(FootPrintsComponent component)
     {
-        if (state)
-            return new EntityCoordinates(uid, transform.LocalPosition);
+        var alpha = Math.Max(0f, component.PrintsColor.A - component.ColorReduceAlpha);
+        component.PrintsColor = component.PrintsColor.WithAlpha(alpha);
+
+        if (alpha > 0f)
+            return;
+
+        component.ColorQuantity = 0f;
+        component.ReagentToTransfer = null;
+    }
+
+    private static EntityCoordinates CalcCoords(
+        EntityUid gridUid,
+        FootPrintsComponent component,
+        TransformComponent transform,
+        bool dragging)
+    {
+        if (dragging)
+            return new EntityCoordinates(gridUid, transform.LocalPosition);
 
         var offset = component.RightStep
-            ? new Angle(Angle.FromDegrees(180f) + transform.LocalRotation).RotateVec(component.OffsetPrint)
+            ? new Angle(StepRotationOffset + transform.LocalRotation).RotateVec(component.OffsetPrint)
             : new Angle(transform.LocalRotation).RotateVec(component.OffsetPrint);
 
-        return new EntityCoordinates(uid, transform.LocalPosition + offset);
+        return new EntityCoordinates(gridUid, transform.LocalPosition + offset);
     }
 
-    private FootPrintVisuals PickState(EntityUid uid, bool dragging)
+    private static ProtoId<DecalPrototype> PickStepDecal(FootPrintsComponent component)
     {
-        var state = FootPrintVisuals.BareFootPrint;
+        return component.RightStep ? component.RightBareDecal : component.LeftBareDecal;
+    }
 
-        if (_inventory.TryGetSlotEntity(uid, "shoes", out _))
-            state = FootPrintVisuals.ShoesPrint;
+    private bool IsFootprintTileAtCap(
+        EntityUid gridUid,
+        EntityCoordinates spawnCoords,
+        FootPrintsComponent component,
+        MapGridComponent? gridComp,
+        bool draggingOnly)
+    {
+        if (gridComp == null ||
+            !_decalGridQuery.TryComp(gridUid, out var decalGrid))
+        {
+            return false;
+        }
 
-        if (_inventory.TryGetSlotEntity(uid, "outerClothing", out var suit) && TryComp<PressureProtectionComponent>(suit, out _))
-            state = FootPrintVisuals.SuitPrint;
+        var tile = _map.CoordinatesToTile(gridUid, gridComp, spawnCoords);
+        return IsFootprintTileAtCap(gridUid, tile, component, decalGrid, draggingOnly);
+    }
 
-        if (dragging)
-            state = FootPrintVisuals.Dragging;
+    private bool IsFootprintTileAtCap(
+        EntityUid gridUid,
+        Vector2i tile,
+        FootPrintsComponent component,
+        DecalGridComponent decalGrid,
+        bool draggingOnly)
+    {
+        var min = new Vector2(tile.X, tile.Y);
+        var bounds = new Box2(min, min + Vector2.One);
+        var chunkCollection = decalGrid.ChunkCollection.ChunkCollection;
+        var chunks = new Robust.Shared.Map.Enumerators.ChunkIndicesEnumerator(bounds, SharedDecalSystem.ChunkSize);
+        var count = 0;
 
-        return state;
+        while (chunks.MoveNext(out var chunkOrigin))
+        {
+            if (!chunkCollection.TryGetValue(chunkOrigin.Value, out var chunk))
+                continue;
+
+            foreach (var (_, decal) in chunk.Decals)
+            {
+                if (!bounds.Contains(decal.Coordinates))
+                    continue;
+
+                if (!IsFootprintDecal(decal.Id, component, draggingOnly))
+                    continue;
+
+                count++;
+
+                if (count >= MaxFootprintsPerTile)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsFootprintDecal(string id, FootPrintsComponent component, bool draggingOnly)
+    {
+        if (component.DraggingDecals.Contains(id))
+            return true;
+
+        return !draggingOnly &&
+               (id == component.LeftBareDecal ||
+                id == component.RightBareDecal ||
+                id == component.ShoesDecal ||
+                id == component.SuitDecal);
     }
 }

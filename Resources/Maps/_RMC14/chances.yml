@@ -98629,7 +98629,7 @@ entities:
     - type: Transform
       pos: 7.5,33.5
       parent: 1
-- proto: RMCPickaxe
+- proto: AU14ToolPickaxe
   entities:
   - uid: 10201
     components:
@@ -104863,7 +104863,7 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -1.4703298,16.563505
       parent: 1
-- proto: RMCSensorTower
+- proto: AU14SensorTower
   entities:
   - uid: 11187
     components:

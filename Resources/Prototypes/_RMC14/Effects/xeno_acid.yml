@@ -132,6 +132,38 @@
     extinguishAmount: 13
 
 - type: entity
+  parent: XenoAcidSprayAcidStacks
+  id: XenoVenatorAcidBlobPool
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: ApplyAcidStacks
+    amount: 2
+    damage:
+      types:
+        Heat: 30
+    requireExisting: true
+
+- type: entity
+  id: XenoFleshBloom
+  name: flesh bloom
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: _RMC14/Effects/xeno_acid.rsi
+    drawdepth: Puddles
+    color: "#7A2447"
+    layers:
+    - state: acid2
+  - type: TimedDespawn
+    lifetime: 8
+  - type: Tag
+    tags:
+    - HideContextMenu
+  - type: XenoFleshBloom
+
+- type: entity
   parent: XenoAcidSprayWeak
   id: XenoAcidSprayTrap
   name: splatter
@@ -212,3 +244,34 @@
     tags:
     - HideContextMenu
 
+- type: entity
+  id: RMCAcidHole
+  name: acid hole
+  description: A corroded opening in the wall.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: WallMount
+    arc: 360
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Sprite
+    sprite: _RMC14/Effects/new_acid.rsi
+    drawdepth: WallMountedItems
+    layers:
+    - state: hole_0
+  - type: Fixtures
+    fixtures:
+      holeFixture:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.25,-0.25,0.25,0.25"
+        hard: false
+        layer:
+        - WallLayer
+        mask:
+        - FullTileMask
+  - type: Clickable
+  - type: XenoAcidHole

@@ -1,4 +1,5 @@
 using Content.Shared._CMU14.Medical.BodyPart.Events;
+using Content.Shared._CMU14.Medical.BodyPart;
 using Content.Shared._CMU14.Medical.Bones.Events;
 using Content.Shared._CMU14.Medical.Items;
 using Content.Shared._CMU14.Medical.Organs;
@@ -6,6 +7,7 @@ using Content.Shared._CMU14.Medical.Organs.Events;
 using Content.Shared._CMU14.Medical.Organs.Heart;
 using Content.Shared._CMU14.Medical.Organs.Lungs;
 using Content.Shared._CMU14.Medical.StatusEffects;
+using Content.Shared._CMU14.Medical.Trauma;
 using Content.Shared._RMC14.Synth;
 using Content.Shared.StatusEffectNew;
 using Content.Shared._RMC14.Medical.Unrevivable;
@@ -40,6 +42,7 @@ public abstract partial class SharedBoneSystem : EntitySystem
     private bool _medicalEnabled;
     private bool _boneEnabled;
     private FixedPoint2 _boneHealRate;
+    private FixedPoint2 _projectileBruteMultiplier = 1;
 
     public override void Initialize()
     {
@@ -51,6 +54,7 @@ public abstract partial class SharedBoneSystem : EntitySystem
         Cfg.OnValueChanged(CMUMedicalCCVars.Enabled, v => _medicalEnabled = v, true);
         Cfg.OnValueChanged(CMUMedicalCCVars.BoneEnabled, v => _boneEnabled = v, true);
         Cfg.OnValueChanged(CMUMedicalCCVars.BoneHealRate, v => _boneHealRate = (FixedPoint2)v, true);
+        Cfg.OnValueChanged(CMUMedicalCCVars.BoneProjectileBruteMultiplier, v => _projectileBruteMultiplier = (FixedPoint2)MathF.Max(0f, v), true);
     }
 
     private void OnBoneStartup(Entity<BoneComponent> ent, ref ComponentStartup args)
@@ -72,6 +76,9 @@ public abstract partial class SharedBoneSystem : EntitySystem
 
     private bool PartBelongsToSynth(EntityUid part)
     {
+        if (HasComp<CMURoboticLimbComponent>(part))
+            return true;
+
         return TryComp<BodyPartComponent>(part, out var bodyPart) &&
                bodyPart.Body is { } body &&
                HasComp<SynthComponent>(body);
@@ -97,7 +104,13 @@ public abstract partial class SharedBoneSystem : EntitySystem
         if (brute <= FixedPoint2.Zero)
             return;
 
-        var absorbed = brute * (FixedPoint2)ent.Comp.BruteAbsorbFraction;
+        if (!args.Trauma.BoneContact)
+            return;
+
+        var effectiveBrute = args.Trauma.Mechanism == CMUTraumaMechanism.Ballistic
+            ? brute * _projectileBruteMultiplier
+            : brute;
+        var absorbed = effectiveBrute * (FixedPoint2)ent.Comp.BruteAbsorbFraction;
         ent.Comp.Integrity = FixedPoint2.Max(FixedPoint2.Zero, ent.Comp.Integrity - absorbed);
         Dirty(ent);
 

@@ -62,7 +62,12 @@
     max: 500
     evolvesTo:
     - RMCXenoCrusher
+    # CMU14
+    - CMXenoWarlock
+    # CMU14
     - CMXenoPraetorian
+    strains:
+    - CMXenoWarriorBulwark
   - type: CMArmor
     xenoArmor: 20
     explosionArmor: 40

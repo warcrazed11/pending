@@ -459,7 +459,7 @@
   - type: Sprite
     sprite: _RMC14/Objects/Clothing/OuterClothing/Armor/m3/light/padded/jungle.rsi
   - type: CMArmor
-    melee: 15
+    melee: 30
     bullet: 15
     bio: 15
     explosionArmor: 15
@@ -626,7 +626,7 @@
   - type: Sprite
     sprite: _RMC14/Objects/Clothing/OuterClothing/Armor/m3/vl.rsi
   - type: CMArmor
-    melee: 15
+    melee: 30
     bullet: 30
     bio: 5
     explosionArmor: 10
@@ -797,6 +797,11 @@
     isCorrodible: false
   - type: CMArmor
     bio: 25
+  - type: RMCArmorSpeedTier
+    speedTier: light
+  - type: ClothingSpeedModifier
+    walkModifier: 0.725
+    sprintModifier: 0.725
   - type: ItemCamouflage
     camouflageVariations:
       Jungle: _RMC14/Objects/Clothing/OuterClothing/Armor/m35/jungle.rsi
@@ -807,6 +812,7 @@
   - type: TemperatureProtection
     heatingCoefficient: 0.001
     coolingCoefficient: 0.3
+  - type: RMCGrantLeapProtection
   - type: ClothingGrantComponents
     components:
     - type: RMCImmuneToIgnition
@@ -820,6 +826,7 @@
       bypassWhitelist:
         components:
         - RMCFireImmunityBypass
+    - type: RMCFireSlowImmunity
     auraColor: "#03FCC6"
 
 # m45

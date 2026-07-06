@@ -11,6 +11,7 @@
   - type: RequireProjectileTarget
   - type: Physics
     bodyType: Dynamic
+  - type: CMUZLevelViewer
   - type: Fixtures
     fixtures:
       main:
@@ -24,6 +25,7 @@
         - LargeMobLayer
         layer:
         - LargeMobLayer
+        - XenoProjectileImpassable
       cockpit:
         shape:
           !type:PhysShapeAabb
@@ -35,6 +37,7 @@
         - LargeMobLayer
         layer:
         - LargeMobLayer
+        - XenoProjectileImpassable
   - type: InteractionOutline
   - type: Sprite
     drawdepth: Mobs
@@ -109,6 +112,7 @@
     reverseAcceleration: 2
     turnDelay: 0.25
     turnInPlace: true
+    movementCollisionInset: 0.17
     xenoBlockMinimumSize: Immobile
     canXenosPush: false
     speedAtZeroIntegrity: 0.25
@@ -146,6 +150,7 @@
   - type: BlackfootRearDoor
     open: false
     rearEntryIndex: 0
+    allowAirborneExit: true
   - type: ItemSlots
     slots:
       thrusters:
@@ -191,7 +196,6 @@
       required: false
   - type: HardpointIntegrity
     maxIntegrity: 500
-    repairFuelCost: 12
     bypassEntryOnZero: true
   - type: VehicleEnter
     interiorPath: /Maps/_CMU14/Vehicles/Blackfoot/blackfoot.yml

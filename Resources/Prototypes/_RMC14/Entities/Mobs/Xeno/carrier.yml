@@ -133,6 +133,9 @@
       visible: false
     - map: [ "enum.XenoInhandVisualLayers.Right" ]
       visible: false
+    - map: [ "enum.RMCShieldVisuals.Base" ]
+      sprite: _RMC14/Effects/xeno_shields.rsi
+      visible: false
   - type: Xeno
     actionIds:
     - ActionXenoRest
@@ -149,6 +152,9 @@
     - ActionXenoDevolve
   - type: XenoParasiteThrower
   - type: XenoEvolution
+    max: 500
+    evolvesTo:
+    - CMXenoReaper
     strains:
     - RMCXenoCarrierEggsac
   - type: RMCActionOrder
@@ -208,4 +214,3 @@
   - type: XenoHidden
   - type: RMCActionOrder
     id: RMCXenoCarrierEggsac
-

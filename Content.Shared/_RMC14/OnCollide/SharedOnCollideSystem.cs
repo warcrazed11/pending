@@ -41,6 +41,7 @@ public abstract partial class SharedOnCollideSystem : EntitySystem
         _damageOnCollideQuery = GetEntityQuery<DamageOnCollideComponent>();
 
         SubscribeLocalEvent<DamageOnCollideComponent, StartCollideEvent>(OnStartCollide);
+        SubscribeLocalEvent<DamageOnCollideComponent, EndCollideEvent>(OnEndCollide);
     }
 
     private void OnStartCollide(Entity<DamageOnCollideComponent> ent, ref StartCollideEvent args)
@@ -48,8 +49,20 @@ public abstract partial class SharedOnCollideSystem : EntitySystem
         OnCollide(ent, args.OtherEntity);
     }
 
+    private void OnEndCollide(Entity<DamageOnCollideComponent> ent, ref EndCollideEvent args)
+    {
+        if (!ent.Comp.CanRehit)
+            return;
+
+        if (ent.Comp.Damaged.Remove(args.OtherEntity))
+            Dirty(ent);
+    }
+
     private void OnCollide(Entity<DamageOnCollideComponent> ent, EntityUid other)
     {
+        if (ent.Comp.Disabled)
+            return;
+
         if (ent.Comp.Damaged.Contains(other))
             return;
 
@@ -77,7 +90,7 @@ public abstract partial class SharedOnCollideSystem : EntitySystem
             var damage = ent.Comp.Damage;
             if (ent.Comp.Acidic)
                 damage = _xeno.TryApplyXenoAcidDamageMultiplier(other, damage);
-            _damageable.TryChangeDamage(other, damage, ent.Comp.IgnoreResistances);
+            _damageable.TryChangeDamage(other, damage, ent.Comp.IgnoreResistances, armorPiercing: ent.Comp.ArmorPenetration);
             DoEmote(ent, other);
             didEmote = true;
         }
@@ -134,6 +147,15 @@ public abstract partial class SharedOnCollideSystem : EntitySystem
             return;
 
         ent.Comp.Chain = chain;
+        Dirty(ent);
+    }
+
+    public void DisableDamageOnCollide(Entity<DamageOnCollideComponent?> ent)
+    {
+        if (!_damageOnCollideQuery.Resolve(ent, ref ent.Comp, false))
+            return;
+
+        ent.Comp.Disabled = true;
         Dirty(ent);
     }
 

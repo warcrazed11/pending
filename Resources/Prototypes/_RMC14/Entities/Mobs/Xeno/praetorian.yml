@@ -225,6 +225,7 @@
   - type: AcidTrap
   - type: RMCActionOrder
     id: RMCXenoPraetorianValkyrie
+  - type: CMUXenoZJump
 
 - type: entity
   parent: CMXenoPraetorianBase
@@ -238,7 +239,7 @@
     - ActionXenoRest
     - ActionXenoRegurgitate
     - ActionXenoWatch
-    - ActionXenoTailStab
+    - ActionXenoTailLance
     - ActionXenoImpale
     - ActionXenoDodge
     - ActionXenoTailTrip
@@ -252,15 +253,17 @@
   - type: XenoClaws
     clawType: Sharp
   - type: XenoFinesse
+  - type: XenoDancerRework
   - type: XenoDodge
   - type: XenoImpale
     damage:
       groups:
-        Brute: 40
+        Brute: 60
   - type: XenoTailTrip
   - type: XenoHidden
   - type: RMCActionOrder
     id: RMCXenoPraetorianDancer
+  - type: CMUXenoZJump
 
 - type: entity
   parent: CMXenoPraetorianBase

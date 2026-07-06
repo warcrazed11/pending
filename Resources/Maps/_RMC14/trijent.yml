@@ -161525,7 +161525,7 @@ entities:
     - type: Transform
       pos: 154.5,-150.5
       parent: 1
-- proto: RMCPickaxe
+- proto: AU14ToolPickaxe
   entities:
   - uid: 16552
     components:
@@ -164373,7 +164373,7 @@ entities:
     - type: Transform
       pos: 92.5,-150.5
       parent: 1
-- proto: RMCSensorTower
+- proto: AU14SensorTower
   entities:
   - uid: 17004
     components:

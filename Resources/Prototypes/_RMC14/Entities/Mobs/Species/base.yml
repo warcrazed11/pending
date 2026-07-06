@@ -115,6 +115,7 @@
   - type: CMUHumanMedical
   - type: HitLocation
   - type: PainShock
+  - type: CMUPainFeedback
   - type: Damageable
     damageContainer: Biological
     damageModifierSet: null
@@ -180,6 +181,15 @@
         type: BodyPartPickerBui
       enum.CMUSurgeryUIKey.Key:
         type: CMUSurgeryBui
+      enum.CMUTraumaGovernorUI.Key:
+        type: CMUTraumaGovernorBui
+        requireInputValidation: false
+      enum.CMUMedicalFieldCraftingUI.Key:
+        type: CMUMedicalFieldCraftingBui
+        requireInputValidation: false
+      enum.FactionLanguageUiKey.Key:
+        type: FactionLanguageBoundUserInterface
+        requireInputValidation: false
   - type: Infectable
   - type: Tackleable
   - type: XenoNestable
@@ -246,6 +256,13 @@
       whitelist:
         components:
         - RequisitionsCrate #Lockers/Crates
+  - type: Language
+    spokenLanguages:
+      - English
+    understoodLanguages:
+      - English
+    currentLanguage: English
+    defaultLanguage: English
   - type: MobThresholds
     thresholds:
       0: Alive
@@ -367,6 +384,9 @@
       8: 8
   - type: XenoToggleChargingKnockback
   - type: XenoToggleChargingParalyze
+  # CMU14
+  - type: CMUXenoBullChargeTarget
+  # CMU14
   - type: RMCMobStateDrawDepth
     drawDepths:
       Dead: BelowMobs
@@ -385,8 +405,14 @@
     whitelist:
       tags:
       - SurvivalPouch
+  - type: TileFirePatter
+    removeDuration: 3.75
+    sound:
+      path: /Audio/_RMC14/Weapons/genhit1.ogg
   - type: HumanoidAppearance
     species: Human
     hideLayersOnEquip:
     - UndergarmentTop
     - Hair
+  - type: LanguageLearning
+    preset: AU14LanguageLearningPresetHuman

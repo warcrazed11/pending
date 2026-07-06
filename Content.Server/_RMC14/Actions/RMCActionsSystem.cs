@@ -1,8 +1,9 @@
 using System.Collections.Immutable;
 using System.Linq;
-using Content.Server.Actions;
 using Content.Shared._RMC14.Actions;
+using Content.Shared.Actions.Components;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -11,16 +12,18 @@ namespace Content.Server._RMC14.Actions;
 
 public sealed partial class RMCActionsSystem : SharedRMCActionsSystem
 {
-    [Dependency] private ActionsSystem _actions = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
     [Dependency] private RMCActionsManager _manager = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
 
-    private readonly HashSet<EntProtoId> _actionsPresent = new();
-    private readonly Dictionary<(NetUserId User, EntProtoId Id), List<EntProtoId>> _toUpdate = new();
+    private readonly Dictionary<(NetUserId User, EntProtoId Id), RMCActionOrderData> _toUpdate = new();
+    private string _actionComponentName = string.Empty;
 
     public override void Initialize()
     {
         base.Initialize();
 
+        _actionComponentName = _componentFactory.GetComponentName<ActionComponent>();
         _manager.OnLoaded += OnLoaded;
 
         SubscribeNetworkEvent<RMCActionOrderChangeEvent>(OnActionOrder);
@@ -45,32 +48,43 @@ public sealed partial class RMCActionsSystem : SharedRMCActionsSystem
             return;
         }
 
-        _actionsPresent.Clear();
-        foreach (var action in _actions.GetActions(ent))
+        FilterInvalidActions(msg.Actions);
+        FilterInvalidActions(msg.HiddenActions);
+
+        var visibleActions = msg.Actions.ToHashSet();
+        msg.HiddenActions.RemoveAll(visibleActions.Contains);
+
+        _toUpdate[(args.SenderSession.UserId, order.Id)] = new RMCActionOrderData(
+            msg.Actions.ToImmutableArray(),
+            msg.HiddenActions.ToImmutableArray(),
+            msg.HiddenActionsKnown);
+    }
+
+    private void FilterInvalidActions(List<EntProtoId> actions)
+    {
+        for (var i = actions.Count - 1; i >= 0; i--)
         {
-            if (Prototype(action)?.ID is not { } proto)
-                continue;
-
-            _actionsPresent.Add(proto);
+            var action = actions[i];
+            if (!_prototypes.TryIndex<EntityPrototype>(action, out var prototype) ||
+                !prototype.Components.ContainsKey(_actionComponentName))
+            {
+                actions.RemoveAt(i);
+            }
         }
-
-        for (var i = msg.Actions.Count - 1; i >= 0; i--)
-        {
-            var action = msg.Actions[i];
-            if (!_actionsPresent.Contains(action))
-                msg.Actions.RemoveAt(i);
-        }
-
-        _toUpdate[(args.SenderSession.UserId, order.Id)] = msg.Actions;
     }
 
     private void OnOrderAttached(Entity<RMCActionOrderComponent> ent, ref PlayerAttachedEvent args)
     {
-        ent.Comp.Order = _manager.GetOrder(args.Player.UserId, ent.Comp.Id);
+        if (_manager.GetOrder(args.Player.UserId, ent.Comp.Id) is not { } order)
+            return;
+
+        ent.Comp.Order = order.Actions;
+        ent.Comp.HiddenActions = order.HiddenActions;
+        ent.Comp.HiddenActionsKnown = order.HiddenActionsKnown;
         Dirty(ent);
     }
 
-    private void OnLoaded(ICommonSession user, Dictionary<EntProtoId, ImmutableArray<EntProtoId>>? allActions)
+    private void OnLoaded(ICommonSession user, Dictionary<EntProtoId, RMCActionOrderData>? allActions)
     {
         if (user.Status != SessionStatus.Connected && user.Status != SessionStatus.InGame)
             return;
@@ -82,9 +96,14 @@ public sealed partial class RMCActionsSystem : SharedRMCActionsSystem
             return;
         }
 
-        order.Order = actions;
+        order.Order = actions.Actions;
+        order.HiddenActions = actions.HiddenActions;
+        order.HiddenActionsKnown = actions.HiddenActionsKnown;
         Dirty(user.AttachedEntity.Value, order);
-        var ev = new RMCActionOrderLoadedEvent(actions.ToList());
+        var ev = new RMCActionOrderLoadedEvent(
+            actions.Actions.ToList(),
+            actions.HiddenActions.ToList(),
+            actions.HiddenActionsKnown);
         RaiseNetworkEvent(ev, user);
     }
 
@@ -94,11 +113,11 @@ public sealed partial class RMCActionsSystem : SharedRMCActionsSystem
 
         try
         {
-            foreach (var ((user, id), actions) in _toUpdate)
+            foreach (var ((user, id), order) in _toUpdate)
             {
                 try
                 {
-                    _manager.SetOrder(user, id, actions);
+                    _manager.SetOrder(user, id, order);
                 }
                 catch (Exception e)
                 {

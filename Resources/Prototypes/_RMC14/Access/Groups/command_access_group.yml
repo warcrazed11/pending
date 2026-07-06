@@ -34,6 +34,7 @@
   - CMAccessRequisitions # (cargo)
   - CMAccessResearch # research access
   - CMAccessSEA # senior enlisted
+  - RMCAccessVehicleCrew # vehicle bay
   - CMAccessSmartPrep # smart gun operator
   - CMAccessSpecPrep # weapons specialist
   - CMAccessSquadLeaderPrep # squad leader access
@@ -43,6 +44,7 @@
   - RMCAccessTSEPA # tsepa
   - RMCAccessDatabase
   - RMCAccessSeniorCommand
+  - RMCAccessLogs
   # CMU14
   - AU14AccessColonyHeadPhysician
   - AU14AccessColonyHeadEngineer
@@ -52,6 +54,8 @@
   - AU14AccessColonyHeadOfService
   - AU14AccessCorporateWEYULiaison
   - AU14AccessColonyAmbassador
+  - AU14AccessOrbitalManagement
+  - AU14AccessOrbitalLaw
 
 - type: accessGroup
   id: CO
@@ -89,6 +93,7 @@
   - CMAccessRequisitions # (cargo)
   - CMAccessResearch # research access
   - CMAccessSEA # senior enlisted
+  - RMCAccessVehicleCrew # vehicle bay
   - CMAccessSmartPrep # smart gun operator
   - CMAccessSpecPrep # weapons specialist
   - CMAccessSquadLeaderPrep # squad leader access
@@ -98,6 +103,7 @@
   - RMCAccessTSEPA # tsepa
   - RMCAccessDatabase
   - RMCAccessSeniorCommand
+  - RMCAccessLogs
 
 # all ship-side access that is not CO
 # SEA uses this.
@@ -137,12 +143,14 @@
   - CMAccessRequisitions
   - CMAccessResearch
   - CMAccessSEA
+  - RMCAccessVehicleCrew
   - CMAccessSmartPrep
   - CMAccessSpecPrep
   - CMAccessSquadLeaderPrep
   - CMAccessMarineRifleman
   - RMCAccessDatabase
   - RMCAccessSeniorCommand
+  - RMCAccessLogs
 
 - type: accessGroup
   id: SEA
@@ -185,6 +193,7 @@
   - CMAccessMarineRifleman
   - RMCAccessDatabase
   - RMCAccessSeniorCommand
+  - RMCAccessLogs
 
 - type: accessGroup
   id: SO
@@ -194,6 +203,7 @@
   - RMCAccessCommand
   - CMAccessDropship
   - CMAccessMedical
+  - RMCAccessVehicleCrew
   - RMCAccessDatabase
 
 # Corp access, probably not needed
