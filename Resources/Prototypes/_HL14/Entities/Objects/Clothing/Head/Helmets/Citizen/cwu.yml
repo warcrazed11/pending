@@ -11,7 +11,7 @@
   - type: Clothing
     sprite: _HL13/Objects/Clothing/Head/Helmets/Citizen/cwucleanuphelmet.rsi
   - type: HideLayerClothing
-    Slots:
+    slots:
     - Hair
     - HeadTop
     - HeadSide
