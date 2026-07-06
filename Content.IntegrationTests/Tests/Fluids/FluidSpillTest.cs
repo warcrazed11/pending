@@ -43,6 +43,8 @@ public sealed class FluidSpill
         var puddleSystem = server.System<PuddleSystem>();
         var mapSystem = server.System<SharedMapSystem>();
         var gameTiming = server.ResolveDependency<IGameTiming>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var floorTile = new Tile(tileDefinitionManager["FloorSteel"].TileId);
         EntityUid gridId = default;
 
         /*
@@ -54,14 +56,14 @@ public sealed class FluidSpill
         await server.WaitPost(() =>
         {
             mapSystem.CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             gridId = grid.Owner;
 
             for (var x = 0; x < 3; x++)
             {
                 for (var y = 0; y < 3; y++)
                 {
-                    mapSystem.SetTile(grid, new Vector2i(x, y), new Tile(1));
+                    mapSystem.SetTile(grid, new Vector2i(x, y), floorTile);
                 }
             }
 

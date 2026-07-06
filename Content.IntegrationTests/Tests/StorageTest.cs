@@ -10,6 +10,7 @@ using Content.Shared.Storage.Components;
 using Content.Shared.Storage.EntitySystems;
 using Content.Shared.Whitelist; // RMC14
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests
@@ -17,6 +18,12 @@ namespace Content.IntegrationTests.Tests
     [TestFixture]
     public sealed class StorageTest
     {
+        private static readonly EntProtoId InfantryIfak = "AU14PouchIFAK";
+        private static readonly EntProtoId InfantryIfakFill = "AU14PouchIFAKFill";
+        private static readonly EntProtoId MedicalPouch = "RMCPouchMedical";
+        private static readonly EntProtoId InfantryIfakTramadolPacket = "AU14PacketPillsTramadol";
+        private static readonly EntProtoId EpinephrineAutoInjector = "CMEpinephrineAutoInjector";
+
         /// <summary>
         /// Can an item store more than itself weighs.
         /// In an ideal world this test wouldn't need to exist because sizes would be recursive.
@@ -29,6 +36,7 @@ namespace Content.IntegrationTests.Tests
 
             var protoManager = server.ResolveDependency<IPrototypeManager>();
             var entMan = server.ResolveDependency<IEntityManager>();
+            var compFact = entMan.ComponentFactory;
 
             var itemSys = entMan.System<SharedItemSystem>();
 
@@ -36,10 +44,10 @@ namespace Content.IntegrationTests.Tests
             {
                 foreach (var proto in protoManager.EnumeratePrototypes<EntityPrototype>())
                 {
-                    if (!proto.TryGetComponent<StorageComponent>("Storage", out var storage) ||
+                    if (!proto.TryComp<StorageComponent>(CompName.Get<StorageComponent>(compFact), out var storage) ||
                         storage.Whitelist != null ||
                         storage.MaxItemSize == null ||
-                        !proto.TryGetComponent<ItemComponent>("Item", out var item))
+                        !proto.TryComp<ItemComponent>(CompName.Get<ItemComponent>(compFact), out var item))
                         continue;
 
                     Assert.That(itemSys.GetSizePrototype(storage.MaxItemSize.Value).Weight,
@@ -57,6 +65,7 @@ namespace Content.IntegrationTests.Tests
             var server = pair.Server;
 
             var protoManager = server.ResolveDependency<IPrototypeManager>();
+            var compFact = server.ResolveDependency<IComponentFactory>();
 
             await server.WaitAssertion(() =>
             {
@@ -64,7 +73,7 @@ namespace Content.IntegrationTests.Tests
                 {
                     foreach (var proto in protoManager.EnumeratePrototypes<EntityPrototype>())
                     {
-                        if (!proto.TryGetComponent<StorageFillComponent>("StorageFill", out var storage))
+                        if (!proto.TryComp<StorageFillComponent>(CompName.Get<StorageFillComponent>(compFact), out var storage))
                             continue;
 
                         foreach (var entry in storage.Contents)
@@ -75,6 +84,84 @@ namespace Content.IntegrationTests.Tests
                     }
                 });
             });
+            await pair.CleanReturnAsync();
+        }
+
+        [Test]
+        public async Task TestHemostaticGauzePacketFitsProdigyIfak()
+        {
+            await using var pair = await PoolManager.GetServerClient();
+            var server = pair.Server;
+
+            var testMap = await pair.CreateTestMap();
+            var coords = testMap.GridCoords;
+            var entMan = server.EntMan;
+            var storageSystem = server.System<SharedStorageSystem>();
+            var mapSystem = server.System<SharedMapSystem>();
+
+            await server.WaitAssertion(() =>
+            {
+                var pouch = entMan.SpawnEntity("AU14PouchIFAKProdigy", coords);
+                var packet = entMan.SpawnEntity("AU14HemostaticGauzePacket", coords);
+
+                Assert.That(storageSystem.CanInsert(pouch, packet, null, out var reason), Is.True, reason);
+
+                entMan.DeleteEntity(packet);
+                entMan.DeleteEntity(pouch);
+                mapSystem.DeleteMap(testMap.MapId);
+            });
+
+            await pair.CleanReturnAsync();
+        }
+
+        [Test]
+        public async Task TestNormalInfantryIfakUsesTramadolPacketInsteadOfEpinephrine()
+        {
+            await using var pair = await PoolManager.GetServerClient();
+            var server = pair.Server;
+
+            await server.WaitAssertion(() =>
+            {
+                var protoManager = server.ResolveDependency<IPrototypeManager>();
+                var factory = server.EntMan.ComponentFactory;
+
+                Assert.That(protoManager.TryIndex<EntityPrototype>(InfantryIfakFill, out var ifak), Is.True);
+                Assert.That(ifak!.TryComp<StorageFillComponent>(out var fill, factory), Is.True);
+
+                var contents = fill!.Contents
+                    .Where(entry => entry.PrototypeId != null)
+                    .Select(entry => entry.PrototypeId!.Value)
+                    .ToList();
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(contents, Does.Contain(InfantryIfakTramadolPacket));
+                    Assert.That(contents, Does.Not.Contain(EpinephrineAutoInjector));
+                });
+            });
+
+            await pair.CleanReturnAsync();
+        }
+
+        [Test]
+        public async Task TestMedicalPouchMatchesInfantryIfakStorageSpace()
+        {
+            await using var pair = await PoolManager.GetServerClient();
+            var server = pair.Server;
+
+            await server.WaitAssertion(() =>
+            {
+                var protoManager = server.ResolveDependency<IPrototypeManager>();
+                var factory = server.EntMan.ComponentFactory;
+
+                Assert.That(protoManager.TryIndex<EntityPrototype>(InfantryIfak, out var ifak), Is.True);
+                Assert.That(protoManager.TryIndex<EntityPrototype>(MedicalPouch, out var medical), Is.True);
+                Assert.That(ifak!.TryComp<StorageComponent>(out var ifakStorage, factory), Is.True);
+                Assert.That(medical!.TryComp<StorageComponent>(out var medicalStorage, factory), Is.True);
+
+                Assert.That(medicalStorage!.Grid.GetArea(), Is.EqualTo(ifakStorage!.Grid.GetArea()));
+            });
+
             await pair.CleanReturnAsync();
         }
 
@@ -112,15 +199,15 @@ namespace Content.IntegrationTests.Tests
                     var size = 0;
                     await server.WaitAssertion(() =>
                     {
-                        if (!proto.TryGetComponent("Storage", out storage))
+                        if (!proto.TryComp(CompName.Get<StorageComponent>(compFact), out storage))
                         {
                             Assert.Fail($"Entity {proto.ID} has storage-fill without a storage component!");
                             return;
                         }
 
-                        proto.TryGetComponent("IgnoreContentsSize", out ignoreContentsSize); // RMC14
-                        proto.TryGetComponent("Item", out item);
-                        size = GetFillSize(fill, false, protoMan, itemSys);
+                        proto.TryComp(CompName.Get<IgnoreContentsSizeComponent>(compFact), out ignoreContentsSize); // RMC14
+                        proto.TryComp(CompName.Get<ItemComponent>(compFact), out item);
+                        size = GetFillSize(fill, false, protoMan, itemSys, compFact);
                     });
 
                     if (storage == null)
@@ -159,7 +246,7 @@ namespace Content.IntegrationTests.Tests
                         ItemComponent? entryItem = null;
                         await server.WaitPost(() =>
                         {
-                            fillItem.TryGetComponent("Item", out entryItem);
+                            fillItem.TryComp(CompName.Get<ItemComponent>(compFact), out entryItem);
 
                             // RMC14
                             if (ignoreContentsSize != null)
@@ -203,13 +290,13 @@ namespace Content.IntegrationTests.Tests
 
                 await server.WaitAssertion(() =>
                 {
-                    if (!proto.TryGetComponent("EntityStorage", out EntityStorageComponent? entStorage))
+                    if (!proto.TryComp<EntityStorageComponent>(CompName.Get<EntityStorageComponent>(compFact), out var entStorage))
                         Assert.Fail($"Entity {proto.ID} has storage-fill without a storage component!");
 
                     if (entStorage == null)
                         return;
 
-                    var size = GetFillSize(fill, true, protoMan, itemSys);
+                    var size = GetFillSize(fill, true, protoMan, itemSys, compFact);
                     Assert.That(size, Is.LessThanOrEqualTo(entStorage.Capacity),
                         $"{proto.ID} storage fill is too large.");
                 });
@@ -217,7 +304,7 @@ namespace Content.IntegrationTests.Tests
             await pair.CleanReturnAsync();
         }
 
-        private int GetEntrySize(EntitySpawnEntry entry, bool getCount, IPrototypeManager protoMan, SharedItemSystem itemSystem)
+        private int GetEntrySize(EntitySpawnEntry entry, bool getCount, IPrototypeManager protoMan, SharedItemSystem itemSystem, IComponentFactory compFact)
         {
             if (entry.PrototypeId == null)
                 return 0;
@@ -232,20 +319,20 @@ namespace Content.IntegrationTests.Tests
                 return entry.Amount;
 
 
-            if (proto.TryGetComponent<ItemComponent>("Item", out var item))
+            if (proto.TryComp<ItemComponent>(CompName.Get<ItemComponent>(compFact), out var item))
                 return itemSystem.GetItemShape(item).GetArea() * entry.Amount;
 
             Assert.Fail($"Prototype is missing item comp: {entry.PrototypeId}");
             return 0;
         }
 
-        private int GetFillSize(StorageFillComponent fill, bool getCount, IPrototypeManager protoMan, SharedItemSystem itemSystem)
+        private int GetFillSize(StorageFillComponent fill, bool getCount, IPrototypeManager protoMan, SharedItemSystem itemSystem, IComponentFactory compFact)
         {
             var totalSize = 0;
             var groups = new Dictionary<string, int>();
             foreach (var entry in fill.Contents)
             {
-                var size = GetEntrySize(entry, getCount, protoMan, itemSystem);
+                var size = GetEntrySize(entry, getCount, protoMan, itemSystem, compFact);
 
                 if (entry.GroupId == null)
                     totalSize += size;

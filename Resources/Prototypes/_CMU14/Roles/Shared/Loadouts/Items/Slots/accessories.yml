@@ -1,0 +1,9 @@
+- type: loadout
+  id: WebbingSurgicalBlueAU14
+  inhand:
+  - CMWebbingSurgicalBlue
+
+- type: loadout
+  id: WebbingSurgicalGreenCMU14
+  inhand:
+  - CMWebbingSurgicalGreen

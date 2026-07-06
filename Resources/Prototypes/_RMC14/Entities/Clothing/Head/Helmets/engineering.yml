@@ -36,11 +36,15 @@
       sprite: _RMC14/Objects/Clothing/Head/Helmets/welding_helmet.rsi
       state: helmet-down
   - type: CMArmor
-    melee: 10 # CLOTHING_ARMOR_LOW
+    melee: 20 # CLOTHING_ARMOR_LOW
     bio: 10 # CLOTHING_ARMOR_LOW
   - type: RemoveComponents
     components:
     - type: IngestionBlocker
+  - type: InteractedBlacklist
+    blacklist:
+      components:
+      - Xeno
 
 - type: Tag
   id: RMCHelmetWelding

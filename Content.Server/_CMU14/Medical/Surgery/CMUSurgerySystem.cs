@@ -1,9 +1,11 @@
 using System;
+using Content.Shared._CMU14.DroneOperator;
 using Content.Shared._CMU14.Medical;
 using Content.Shared._CMU14.Medical.Bones;
 using Content.Shared._CMU14.Medical.BodyPart;
 using Content.Shared._CMU14.Medical.Organs;
 using Content.Shared._CMU14.Medical.Surgery;
+using Content.Shared._CMU14.Medical.Wounds;
 using Content.Shared._RMC14.Synth;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Organ;
@@ -79,6 +81,12 @@ public sealed partial class CMUSurgerySystem : SharedCMUSurgerySystem
             return;
         }
 
+        if (!CanPatientAcceptLimb(body, limb))
+        {
+            _popup.PopupEntity(Loc.GetString("cmu-medical-reattach-requires-robotic-limb"), body, user, PopupType.SmallCaution);
+            return;
+        }
+
         if (!TryFindPartSlot(body, limbPart.PartType, limbPart.Symmetry, out var rootPart, out var slotId))
         {
             _popup.PopupEntity(Loc.GetString("cmu-medical-reattach-slot-occupied"), user, user, PopupType.SmallCaution);
@@ -107,6 +115,8 @@ public sealed partial class CMUSurgerySystem : SharedCMUSurgerySystem
         // (Comminuted) from prior trauma, leave it.
         if (HasComp<SynthComponent>(body))
         {
+            ClearSynthLimbOrganicMedicalState(limb);
+
             if (TryComp<FractureComponent>(limb, out var existingFracture))
                 Fracture.SetSeverity((limb, existingFracture), FractureSeverity.None, forceUpgrade: false);
         }
@@ -119,6 +129,34 @@ public sealed partial class CMUSurgerySystem : SharedCMUSurgerySystem
         TryClearMissingLimbStatus(body, limbPart.PartType, limbPart.Symmetry);
 
         _popup.PopupEntity(Loc.GetString("cmu-medical-reattach-success"), body, user, PopupType.Medium);
+    }
+
+    private bool CanPatientAcceptLimb(EntityUid body, EntityUid limb)
+    {
+        return !HasComp<CMUDroneAndroidComponent>(body) ||
+               HasComp<CMURoboticLimbComponent>(limb);
+    }
+
+    private void ClearSynthLimbOrganicMedicalState(EntityUid limb)
+    {
+        if (TryComp<BodyPartWoundComponent>(limb, out var wounds))
+        {
+            Wounds.ClearAllWounds((limb, wounds));
+
+            if (HasComp<BodyPartWoundComponent>(limb))
+                RemComp<BodyPartWoundComponent>(limb);
+        }
+
+        if (HasComp<InternalBleedingComponent>(limb))
+            RemComp<InternalBleedingComponent>(limb);
+        if (HasComp<CMUInternalBleedingSuppressedComponent>(limb))
+            RemComp<CMUInternalBleedingSuppressedComponent>(limb);
+        if (HasComp<CMUTourniquetComponent>(limb))
+            RemComp<CMUTourniquetComponent>(limb);
+        if (HasComp<CMUEscharComponent>(limb))
+            RemComp<CMUEscharComponent>(limb);
+        if (HasComp<CMUNecroticComponent>(limb))
+            RemComp<CMUNecroticComponent>(limb);
     }
 
     private void RestoreUsableHands(EntityUid body)

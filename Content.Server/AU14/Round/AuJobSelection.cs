@@ -1,6 +1,8 @@
 using System.Linq;
+using Content.Server._CMU14.Threats;
+using Content.Server.AU14.Scenario;
+using Content.Shared._CMU14.Threats;
 using Content.Shared.Preferences;
-using Content.Shared.AU14.Threats;
 using Content.Shared.AU14.util;
 using Content.Shared.Roles;
 using Robust.Shared.Prototypes;
@@ -16,10 +18,45 @@ public sealed partial class AuJobSelectionSystem : EntitySystem
 {
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private AuRoundSystem _auRoundSystem = default!;
+    [Dependency] private ScenarioPlanSystem _scenarioPlan = default!;
     [Dependency] private IRobustRandom _random = default!;
 
 
     public Dictionary<NetUserId, string> ForcedJobAssignments { get; } = new();
+
+
+    public List<NetUserId> AssignThreatVotePoolJobs(
+        Dictionary<NetUserId, HumanoidCharacterProfile> profiles,
+        IReadOnlyList<ProtoId<ThreatPrototype>> candidateThreats,
+        ThreatVoteBodyCount heldBodyCount,
+        string? presetId)
+    {
+        ForcedJobAssignments.Clear();
+
+        if (profiles.Count == 0 || candidateThreats.Count == 0 || heldBodyCount.Total <= 0)
+            return new List<NetUserId>();
+
+        var shuffledPlayers = profiles.Keys.ToList();
+        _random.Shuffle(shuffledPlayers);
+
+        var assignments = ThreatVoteSelection.BuildHeldAssignments(
+            shuffledPlayers,
+            profiles,
+            candidateThreats,
+            heldBodyCount.Leaders,
+            heldBodyCount.Members,
+            presetId);
+
+        foreach (var assignment in assignments)
+        {
+            ForcedJobAssignments[assignment.Player] = assignment.Job.Id;
+        }
+
+        Logger.GetSawmill("au14.jobs").Debug(
+            $"[DEBUG] Held {assignments.Count} threat vote player(s): {string.Join(", ", assignments.Select(a => a.Player.ToString()))}");
+
+        return assignments.Select(assignment => assignment.Player).ToList();
+    }
 
 
     public void AssignThreatAndThirdPartyJobs(Dictionary<NetUserId, HumanoidCharacterProfile> profiles)
@@ -32,13 +69,14 @@ public sealed partial class AuJobSelectionSystem : EntitySystem
             return;
 
         // Get gamemode and threat
-        var presetId = _auRoundSystem.SelectedPreset?.ID.ToLowerInvariant() ?? string.Empty;
-        var threat = _auRoundSystem._selectedthreat;
+        var selectedPresetId = _auRoundSystem.SelectedPreset?.ID;
+        var presetId = selectedPresetId?.ToLowerInvariant() ?? string.Empty;
+        var threat = _auRoundSystem.SelectedThreat;
         Logger.GetSawmill("au14.jobs").Debug( $"[DEBUG] Preset: {presetId}, Threat: {threat?.ID ?? "null"}");
 
         var threatRatio = threat?.ThreatRatio ?? 0f;
 
-        // Third parties spawn through AuThirdPartySystem's dedicated ghost-role path.
+        // Third parties spawn through ThirdPartySystem's dedicated ghost-role path.
         // Do not force players into the utility ThirdParty jobs at roundstart: those
         // jobs are not station jobs and the normal spawn pipeline creates naked
         // placeholder humans when it tries to spawn them directly.
@@ -52,40 +90,39 @@ public sealed partial class AuJobSelectionSystem : EntitySystem
         // Determine number of threat leaders/members
         int numThreatLeaders = 0;
         int numThreatMembers = 0;
-        if (useThreat && threat != null && _prototypeManager.TryIndex(threat.RoundStartSpawn, out PartySpawnPrototype? partySpawn))
+        if (useThreat && threat != null)
         {
-            // Sum scaled counts for each individual leader entity prototype
-            foreach (var (protoId, staticCount) in partySpawn.LeadersToSpawn)
+            var coveredScenarioForce = _scenarioPlan.HasMappedHostileRoundGroup(
+                selectedPresetId ?? string.Empty,
+                threat.ID);
+            if (TryResolveThreatBodyCountFromScenarioPlan(
+                    selectedPresetId ?? string.Empty,
+                    threat,
+                    playerCount,
+                    out var bodyCount,
+                    out var diagnostic))
             {
-                if (partySpawn.Scaling.TryGetValue(protoId, out var entry))
-                {
-                    var baseCount = entry.Benchmark ?? staticCount;
-                    var extra = JobScaling.CalculateExtraSlots(playerCount, entry);
-                    var scaledCount = JobScaling.CalculateScaledSlots(playerCount, staticCount, entry);
-                    numThreatLeaders += scaledCount;
-                    Logger.GetSawmill("au14.jobs").Debug( $"[DEBUG] Scaled threat leader '{protoId}' to {scaledCount} (base={baseCount}, extra={extra}, max={entry.Maximum?.ToString() ?? "null"}, players={playerCount})");
-                }
-                else
-                {
-                    numThreatLeaders += staticCount;
-                }
+                numThreatLeaders = bodyCount.Leaders;
+                numThreatMembers = bodyCount.Members;
+                Logger.GetSawmill("au14.jobs").Debug(
+                    $"[DEBUG] Scenario Plan resolved threat bodies: leaders={numThreatLeaders}, members={numThreatMembers}");
             }
-
-            // Sum scaled counts for each individual grunt/member entity prototype
-            foreach (var (protoId, staticCount) in partySpawn.GruntsToSpawn)
+            else if (!coveredScenarioForce &&
+                     TryCalculateLegacyThreatBodyCount(threat, playerCount, out bodyCount))
             {
-                if (partySpawn.Scaling.TryGetValue(protoId, out var entry))
-                {
-                    var baseCount = entry.Benchmark ?? staticCount;
-                    var extra = JobScaling.CalculateExtraSlots(playerCount, entry);
-                    var scaledCount = JobScaling.CalculateScaledSlots(playerCount, staticCount, entry);
-                    numThreatMembers += scaledCount;
-                    Logger.GetSawmill("au14.jobs").Debug( $"[DEBUG] Scaled threat member '{protoId}' to {scaledCount} (base={baseCount}, extra={extra}, max={entry.Maximum?.ToString() ?? "null"}, players={playerCount})");
-                }
+                numThreatLeaders = bodyCount.Leaders;
+                numThreatMembers = bodyCount.Members;
+                Logger.GetSawmill("au14.jobs").Warning(
+                    $"[AuJobSelectionSystem] Could not resolve selected threat from Scenario Plan; falling back to legacy body-count calculation. {diagnostic}");
+            }
+            else
+            {
+                var message =
+                    $"[AuJobSelectionSystem] Could not resolve selected threat body count for {threat.ID}; no threat jobs will be assigned. {diagnostic}";
+                if (coveredScenarioForce)
+                    Logger.GetSawmill("au14.jobs").Error(message);
                 else
-                {
-                    numThreatMembers += staticCount;
-                }
+                    Logger.GetSawmill("au14.jobs").Warning(message);
             }
 
             Logger.GetSawmill("au14.jobs").Debug( $"[DEBUG] Threat leaders to assign: {numThreatLeaders}, members: {numThreatMembers}");
@@ -108,24 +145,28 @@ public sealed partial class AuJobSelectionSystem : EntitySystem
         int toAssignThreatLeaders = Math.Max(0, numThreatLeaders - alreadyThreatLeaders);
         int toAssignThreatMembers = Math.Max(0, numThreatMembers - alreadyThreatMembers);
         Logger.GetSawmill("au14.jobs").Debug( $"[DEBUG] To assign: ThreatLeaders={toAssignThreatLeaders}, ThreatMembers={toAssignThreatMembers}");
+        if (toAssignThreatLeaders == 0 && toAssignThreatMembers == 0)
+        {
+            Logger.GetSawmill("au14.jobs").Debug("[DEBUG] No threat jobs to assign.");
+            return;
+        }
 
         // Only assign to players who do not already have a forced assignment
         var unassignedPlayers = shuffledPlayers.Where(p => !ForcedJobAssignments.ContainsKey(p)).ToList();
 
-        // Filter players who have queued for threat jobs (have them in job priorities with priority != Never)
+        // Filter players who queued for the generic threat jobs and opted into the selected threat.
         var threatLeaderJobId = new ProtoId<JobPrototype>("AU14JobThreatLeader");
         var threatMemberJobId = new ProtoId<JobPrototype>("AU14JobThreatMember");
+        var selectedThreatId = new ProtoId<ThreatPrototype>(threat!.ID);
 
         var playersQueuedForThreatLeader = unassignedPlayers
             .Where(p => profiles.TryGetValue(p, out var profile) &&
-                       profile.GetJobPrioritiesForGamemode(presetId).TryGetValue(threatLeaderJobId, out var priority) &&
-                       priority != JobPriority.Never)
+                       CanAssignThreatJob(profile, presetId, threatLeaderJobId, selectedThreatId))
             .ToList();
 
         var playersQueuedForThreatMember = unassignedPlayers
             .Where(p => profiles.TryGetValue(p, out var profile) &&
-                       profile.GetJobPrioritiesForGamemode(presetId).TryGetValue(threatMemberJobId, out var priority) &&
-                       priority != JobPriority.Never)
+                       CanAssignThreatJob(profile, presetId, threatMemberJobId, selectedThreatId))
             .ToList();
 
         Logger.GetSawmill("au14.jobs").Debug( $"[DEBUG] Players queued for ThreatLeader: {playersQueuedForThreatLeader.Count}, ThreatMember: {playersQueuedForThreatMember.Count}");
@@ -167,5 +208,68 @@ public sealed partial class AuJobSelectionSystem : EntitySystem
         }
         // The rest will be assigned normally
         Logger.GetSawmill("au14.jobs").Debug( $"[DEBUG] ForcedJobAssignments: {string.Join(", ", ForcedJobAssignments.Select(kv => $"{kv.Key}:{kv.Value}"))}");
+    }
+
+    private bool TryResolveThreatBodyCountFromScenarioPlan(
+        string selectedPresetId,
+        ThreatPrototype threat,
+        int playerCount,
+        out ThreatVoteBodyCount bodyCount,
+        out string diagnostic)
+    {
+        var platoonSpawnRuleSystem = EntityManager.EntitySysManager.GetEntitySystem<PlatoonSpawnRuleSystem>();
+        var request = new ScenarioPlanValidationRequest(
+            selectedPresetId,
+            playerCount,
+            platoonSpawnRuleSystem.SelectedGovforPlatoon?.ID,
+            platoonSpawnRuleSystem.SelectedOpforPlatoon?.ID,
+            _auRoundSystem.GetSelectedPlanetId(),
+            _auRoundSystem.GetSelectedPlanet()?.MapId,
+            threat.ID,
+            _auRoundSystem.GetSelectedGovforShip(),
+            _auRoundSystem.GetSelectedOpforShip());
+
+        if (!_scenarioPlan.TryResolveSelectedThreatForce(request, out var force, out diagnostic) ||
+            force == null)
+        {
+            bodyCount = default;
+            return false;
+        }
+
+        bodyCount = new ThreatVoteBodyCount(force.LeaderBodies, force.MemberBodies);
+        return true;
+    }
+
+    private bool TryCalculateLegacyThreatBodyCount(
+        ThreatPrototype threat,
+        int playerCount,
+        out ThreatVoteBodyCount bodyCount)
+    {
+        bodyCount = default;
+        if (!_prototypeManager.TryIndex(threat.RoundStartSpawn, out PartySpawnPrototype? partySpawn))
+            return false;
+
+        bodyCount = ThreatVoteSelection.CalculateBodyCount(partySpawn, playerCount);
+        return true;
+    }
+
+    internal static bool CanAssignThreatJob(
+        HumanoidCharacterProfile profile,
+        string? presetId,
+        ProtoId<JobPrototype> threatJobId,
+        ProtoId<ThreatPrototype> selectedThreatId)
+    {
+        if (!profile.GetJobPrioritiesForGamemode(presetId).TryGetValue(threatJobId, out var priority) ||
+            priority == JobPriority.Never)
+        {
+            return false;
+        }
+
+        var threatPreferences = profile.GetThreatPreferencesForGamemode(presetId);
+        if (threatPreferences.Count == 0)
+            return true;
+
+        return threatPreferences
+            .Any(preference => preference.Id.Equals(selectedThreatId.Id, StringComparison.OrdinalIgnoreCase));
     }
 }

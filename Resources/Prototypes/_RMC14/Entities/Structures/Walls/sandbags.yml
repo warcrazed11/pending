@@ -14,7 +14,9 @@
   - type: Sprite
     sprite: _RMC14/Structures/Walls/Barricades/barricade.rsi
     layers:
-    - state: sandbag
+    - state: DamageOverlay_0
+      map: [ "enum.RMCDamageOverlayVisuals.DamageOverlay" ]
+      sprite: _RMC14/Structures/Walls/Barricades/sandbag_cracks.rsi
     - map: [ "acided" ]
     drawdepth: WallTops
   - type: GenericVisualizer
@@ -47,10 +49,13 @@
         acts: [ "Destruction" ]
   - type: DamageVisuals
     thresholds: [4, 8, 12]
-    damageDivisor: 25
+    damageDivisor: 28.125
     trackAllDamage: true
-    damageOverlay:
-      sprite: _RMC14/Structures/Walls/Barricades/sandbag_cracks.rsi
+    overlay: false
+    targetLayers:
+    - "enum.RMCDamageOverlayVisuals.DamageOverlay"
+    hideIfZero: false
+    damageGroup: "Brute"
   - type: Barbed
     thornsDamage:
       types:
@@ -69,6 +74,12 @@
   - type: BarricadeBlock
     bidirectional: true
     blocking: 75
+  - type: Appearance
+  - type: Flamability
+    chance: 0.3
+    rate: 0.8
+    range: 0.5
+    spread: 0.3
 
 
 - type: entity
@@ -94,6 +105,11 @@
   - type: Stack
     stackType: CMSandbagEmpty
     count: 1
+  - type: Flamability
+    chance: 0.7
+    rate: 0.2
+    range: 0.4
+    spread: 0.3
 
 - type: entity
   parent: CMSandbagEmpty
@@ -145,6 +161,11 @@
   - type: Stack
     stackType: CMSandbagFull
     count: 1
+  - type: Flamability
+    chance: 0.2
+    rate: 0.1
+    range: 0.3
+    spread: 0.2
   - type: InteractedBlacklist
     blacklist:
       components:

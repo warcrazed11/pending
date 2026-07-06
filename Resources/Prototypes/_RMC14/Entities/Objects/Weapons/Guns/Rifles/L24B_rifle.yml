@@ -31,12 +31,12 @@
     recoilUnwielded: 0.5
     scatterWielded: 3
     scatterUnwielded: 10
-    baseFireRate: 2.75
+    baseFireRate: 3.5
     burstScatterMult: 1
     modifiers:
       Burst:
         fireDelay: 0.08
-        maxScatterModifier: 6
+        maxScatterModifier: 4
         useBurstScatterMult: true
         unwieldedScatterMultiplier: 2
         shotsToMaxScatter: 3

@@ -5,6 +5,7 @@ using Content.Shared._CMU14.Medical.Items;
 using Content.Shared._CMU14.Medical.Wounds;
 using Content.Shared._RMC14.Marines.Skills;
 using Content.Shared._RMC14.Medical.Unrevivable;
+using Content.Shared._RMC14.Synth;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
 using Content.Shared.DoAfter;
@@ -70,6 +71,10 @@ public abstract partial class SharedCMUTourniquetSystem : EntitySystem
         {
             return;
         }
+        if (HasComp<SynthComponent>(target))
+        {
+            return;
+        }
 
         if (!TryFindTourniquetTargetPart(args.User, target, out var part, out var alreadyOn))
         {
@@ -100,6 +105,10 @@ public abstract partial class SharedCMUTourniquetSystem : EntitySystem
         if (args.Cancelled || args.Target is not { } target)
             return;
         if (!IsLayerEnabled())
+        {
+            return;
+        }
+        if (HasComp<SynthComponent>(target))
         {
             return;
         }
@@ -182,6 +191,12 @@ public abstract partial class SharedCMUTourniquetSystem : EntitySystem
     {
         if (!HasComp<BodyPartComponent>(part))
             return false;
+        if (HasComp<CMURoboticLimbComponent>(part))
+            return false;
+        if (HasComp<SynthComponent>(part))
+            return false;
+        if (Wounds.TryGetBodyOwner(part) is { } body && HasComp<SynthComponent>(body))
+            return false;
 
         var now = Timing.CurTime;
         var necrosisOffset = TimeSpan.FromMinutes(_necrosisMinutes);
@@ -230,6 +245,10 @@ public abstract partial class SharedCMUTourniquetSystem : EntitySystem
                 {
                     continue;
                 }
+                if (HasComp<CMURoboticLimbComponent>(id))
+                {
+                    continue;
+                }
 
                 if (HasComp<CMUTourniquetComponent>(id))
                 {
@@ -251,6 +270,8 @@ public abstract partial class SharedCMUTourniquetSystem : EntitySystem
         {
             if (!IsTourniquetable(partComp.PartType))
                 continue;
+            if (HasComp<CMURoboticLimbComponent>(id))
+                continue;
             if (HasComp<CMUTourniquetComponent>(id))
             {
                 part = id;
@@ -262,6 +283,8 @@ public abstract partial class SharedCMUTourniquetSystem : EntitySystem
         foreach (var (id, partComp) in Body.GetBodyChildren(patient))
         {
             if (!IsTourniquetable(partComp.PartType))
+                continue;
+            if (HasComp<CMURoboticLimbComponent>(id))
                 continue;
             if (HasComp<BodyPartWoundComponent>(id) || HasComp<InternalBleedingComponent>(id))
             {
@@ -340,8 +363,13 @@ public abstract partial class SharedCMUTourniquetSystem : EntitySystem
         var query = EntityQueryEnumerator<CMUTourniquetComponent, BodyPartComponent>();
         while (query.MoveNext(out var partUid, out var tq, out var part))
         {
-            if (part.Body is not { } body || Unrevivable.IsUnrevivable(body))
+            if (part.Body is not { } body ||
+                Unrevivable.IsUnrevivable(body) ||
+                HasComp<SynthComponent>(body) ||
+                HasComp<CMURoboticLimbComponent>(partUid))
+            {
                 continue;
+            }
 
             if (tq.NextUpdate > now)
                 continue;

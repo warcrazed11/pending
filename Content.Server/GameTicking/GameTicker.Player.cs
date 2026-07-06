@@ -17,6 +17,8 @@ namespace Content.Server.GameTicking
     [UsedImplicitly]
     public sealed partial class GameTicker
     {
+        private static readonly TimeSpan JoinTimingWarnThreshold = TimeSpan.FromSeconds(1);
+
         [Dependency] private IPlayerManager _playerManager = default!;
 
         private void InitializePlayer()
@@ -42,6 +44,8 @@ namespace Content.Server.GameTicking
             {
                 case SessionStatus.Connected:
                 {
+                    LogSlowJoinTransition(session, "GameTicker received Connected");
+
                     AddPlayerToDb(args.Session.UserId.UserId);
 
                     // Always make sure the client has player data.
@@ -54,7 +58,11 @@ namespace Content.Server.GameTicking
 
                     // Make the player actually join the game.
                     // timer time must be > tick length
-                    Timer.Spawn(0, () => _playerManager.JoinGame(args.Session));
+                    Timer.Spawn(0, () =>
+                    {
+                        LogSlowJoinTransition(session, "GameTicker calling JoinGame");
+                        _playerManager.JoinGame(args.Session);
+                    });
 
                     var record = await _db.GetPlayerRecordByUserId(args.Session.UserId);
                     var firstConnection = record != null &&
@@ -71,17 +79,13 @@ namespace Content.Server.GameTicking
                             Filter.Empty().AddPlayers(_adminManager.ActiveAdmins), false,
                             audioParams: new AudioParams { Volume = -5f });
 
-                    if (LobbyEnabled && _roundStartCountdownHasNotStartedYetDueToNoPlayers)
-                    {
-                        _roundStartCountdownHasNotStartedYetDueToNoPlayers = false;
-                        _roundStartTime = _gameTiming.CurTime + LobbyDuration;
-                    }
-
                     break;
                 }
 
                 case SessionStatus.InGame:
                 {
+                    LogSlowJoinTransition(session, "GameTicker received InGame");
+
                     _userDb.ClientConnected(session);
 
                     if (mind == null)
@@ -132,6 +136,9 @@ namespace Content.Server.GameTicking
                     break;
                 }
             }
+
+            UpdateLobbyCountdownForPlayerCount();
+
             //When the status of a player changes, update the server info text
             UpdateInfoText();
 
@@ -176,6 +183,19 @@ namespace Content.Server.GameTicking
             }
         }
 
+        private void LogSlowJoinTransition(ICommonSession session, string step)
+        {
+            var elapsed = DateTime.UtcNow - session.ConnectedTime;
+            if (elapsed < JoinTimingWarnThreshold)
+                return;
+
+            Log.Warning(
+                "[JOIN-TIMING] {Step} for {Player} {Elapsed:N0} ms after Connected status was set",
+                step,
+                session,
+                elapsed.TotalMilliseconds);
+        }
+
         public HumanoidCharacterProfile GetPlayerProfile(ICommonSession p)
         {
             return (HumanoidCharacterProfile) _prefsManager.GetPreferences(p.UserId).SelectedCharacter;
@@ -183,6 +203,8 @@ namespace Content.Server.GameTicking
 
         public void PlayerJoinGame(ICommonSession session, bool silent = false)
         {
+            LogSlowJoinTransition(session, "GameTicker sending game join");
+
             if (!silent)
                 _chatManager.DispatchServerMessage(session, Loc.GetString("game-ticker-player-join-game-message"));
 
@@ -204,6 +226,8 @@ namespace Content.Server.GameTicking
 
         private void PlayerJoinLobby(ICommonSession session)
         {
+            LogSlowJoinTransition(session, "GameTicker sending lobby join");
+
             _playerGameStatuses[session.UserId] = LobbyEnabled ? PlayerGameStatus.NotReadyToPlay : PlayerGameStatus.ReadyToPlay;
             _db.AddRoundPlayers(RoundId, session.UserId);
 

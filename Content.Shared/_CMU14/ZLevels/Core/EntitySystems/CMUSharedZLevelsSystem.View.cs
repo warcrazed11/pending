@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Content.Shared._CMU14.ZLevels.Core.Components;
+using Content.Shared._RMC14.Xenonids.Construction.Nest;
 using Content.Shared.Actions;
 using Content.Shared.Maps;
 using Content.Shared.Popups;
@@ -10,13 +12,25 @@ namespace Content.Shared._CMU14.ZLevels.Core.EntitySystems;
 
 public abstract partial class CMUSharedZLevelsSystem
 {
-    private const float ZShotOpeningStep = 0.25f;
-
     [Dependency] protected ITileDefinitionManager TilDefMan = default!;
+
+    private readonly CMUZLevelOpeningCache _sharedOpeningCache = new();
+    private readonly List<Entity<MapGridComponent>> _openingGridScratch = new();
+
     private void InitView()
     {
         SubscribeLocalEvent<CMUZLevelViewerComponent, MoveEvent>(OnViewerMove);
         SubscribeLocalEvent<CMUZLevelViewerComponent, CMUToggleZLevelLookUpAction>(OnToggleLookUp);
+    }
+
+    protected void InvalidateSharedOpeningCache(EntityUid gridUid)
+    {
+        _sharedOpeningCache.RemoveGrid(gridUid);
+    }
+
+    protected void InvalidateSharedOpeningCache(ref TileChangedEvent args)
+    {
+        _sharedOpeningCache.InvalidateTiles(args.Entity, args.Changes);
     }
 
     protected virtual void OnViewerMove(Entity<CMUZLevelViewerComponent> ent, ref MoveEvent args)
@@ -37,7 +51,13 @@ public abstract partial class CMUSharedZLevelsSystem
 
         args.Handled = true;
 
-        if (HasOpaqueAbove(ent))
+        if (!ent.Comp.LookUp && HasComp<XenoNestedComponent>(ent))
+        {
+            _popup.PopupClient(Loc.GetString("cmu-zlevel-look-up-nested"), ent, ent, PopupType.SmallCaution);
+            return;
+        }
+
+        if (!ent.Comp.LookUp && HasOpaqueAbove(ent))
         {
             _popup.PopupClient(Loc.GetString("cmu-zlevel-look-up-fail"), ent, ent, PopupType.SmallCaution);
             return;
@@ -82,13 +102,19 @@ public abstract partial class CMUSharedZLevelsSystem
         if (currentMapUid is null)
             return false;
 
-        if (!TryMapUp(currentMapUid.Value, out var mapAboveUid))
+        return HasOpaqueAbove(currentMapUid.Value, _transform.GetWorldPosition(ent));
+    }
+
+    public bool HasOpaqueAbove(Entity<CMUZLevelMapComponent?> currentMapUid, Vector2 worldPosition)
+    {
+        if (!TryMapUp(currentMapUid, out var mapAboveUid))
             return false;
 
-        if (!_gridQuery.TryComp(mapAboveUid.Value, out var mapAboveGrid))
+        if (!TryGetMapCoordinates(mapAboveUid.Value, worldPosition, out var aboveMapCoordinates) ||
+            !_map.TryFindGridAt(aboveMapCoordinates, out var gridUid, out var mapAboveGrid))
             return false;
 
-        return !CMUZLevelOpeningCache.IsOpeningTile(mapAboveUid.Value, mapAboveGrid, _transform.GetWorldPosition(ent), _map, TilDefMan);
+        return !CMUZLevelOpeningCache.IsOpeningTile(gridUid, mapAboveGrid, worldPosition, _map, TilDefMan);
     }
 
     public bool HasZLevelEye(CMUZLevelViewerComponent viewer, EntityUid targetMap)
@@ -115,32 +141,20 @@ public abstract partial class CMUSharedZLevelsSystem
             return true;
         }
 
-        var center = _map.WorldToTile(map, grid, position);
-        var tileRadius = Math.Max(0, (int) MathF.Ceiling(radius / grid.TileSize));
-        var bestDistanceSquared = radius * radius;
-        var found = false;
-        var gridEnt = new Entity<MapGridComponent>(map, grid);
+        if (!_mapQuery.TryComp(map, out var mapComp))
+            return false;
 
-        for (var x = -tileRadius; x <= tileRadius; x++)
-        {
-            for (var y = -tileRadius; y <= tileRadius; y++)
-            {
-                var tile = center + new Vector2i(x, y);
-                if (!CMUZLevelOpeningCache.IsOpeningTile(gridEnt, tile, _map, TilDefMan))
-                    continue;
-
-                var candidate = _map.ToCenterCoordinates(map, tile, grid).Position;
-                var distanceSquared = Vector2.DistanceSquared(position, candidate);
-                if (distanceSquared > bestDistanceSquared)
-                    continue;
-
-                bestDistanceSquared = distanceSquared;
-                openingPosition = candidate;
-                found = true;
-            }
-        }
-
-        return found;
+        return _sharedOpeningCache.TryFindNearestOpeningCenterNear(
+            mapComp.MapId,
+            position,
+            radius,
+            out openingPosition,
+            _openingGridScratch,
+            _mapManager,
+            _map,
+            _transform,
+            TilDefMan,
+            edgeOnly: false);
     }
 
     public bool TryFindZShotOpening(
@@ -161,9 +175,6 @@ public abstract partial class CMUSharedZLevelsSystem
         if (!_gridQuery.TryComp(openingMap, out var grid))
             return false;
 
-        var delta = to - from;
-        var distance = delta.Length();
-        var steps = Math.Max(1, (int) MathF.Ceiling(distance / ZShotOpeningStep));
         var sourceTile = preferOpeningAwayFromSource
             ? _map.WorldToTile(openingMap, grid, from)
             : default;
@@ -173,25 +184,19 @@ public abstract partial class CMUSharedZLevelsSystem
             ? float.PositiveInfinity
             : grid.TileSize * (0.5f + Math.Max(0f, maxSourceDistanceFromOpeningEdgeTiles));
         var maxSourceDistanceSquared = maxSourceDistanceFromOpeningCenter * maxSourceDistanceFromOpeningCenter;
+        var selectedOpening = Vector2.Zero;
 
-        for (var i = 0; i <= steps; i++)
+        bool TryUseOpeningTile(Vector2i tile)
         {
-            var position = from + delta * (i / (float) steps);
-            var tile = _map.WorldToTile(openingMap, grid, position);
-            if (_map.TryGetTileRef(openingMap, grid, position, out var tileRef))
+            if (_map.TryGetTileRef(openingMap, grid, tile, out var tileRef) &&
+                !CMUZLevelOpeningCache.IsOpeningTile(tileRef.Tile, TilDefMan))
             {
-                if (!CMUZLevelOpeningCache.IsOpeningTile(tileRef.Tile, TilDefMan))
-                    continue;
-
-                tile = tileRef.GridIndices;
+                return false;
             }
 
             var openingCenter = _map.ToCenterCoordinates(openingMap, tile, grid).Position;
-            if (!IsZShotOpening(openingMap, grid, openingCenter))
-                continue;
-
             if (Vector2.DistanceSquared(from, openingCenter) > maxSourceDistanceSquared)
-                continue;
+                return false;
 
             if (preferOpeningAwayFromSource &&
                 tile == sourceTile)
@@ -202,11 +207,55 @@ public abstract partial class CMUSharedZLevelsSystem
                     hasFallbackOpening = true;
                 }
 
-                continue;
+                return false;
             }
 
-            opening = openingCenter;
+            selectedOpening = openingCenter;
             return true;
+        }
+
+        var localFrom = _map.WorldToLocal(openingMap, grid, from) / grid.TileSize;
+        var localTo = _map.WorldToLocal(openingMap, grid, to) / grid.TileSize;
+        var localDelta = localTo - localFrom;
+        var currentTile = new Vector2i((int) MathF.Floor(localFrom.X), (int) MathF.Floor(localFrom.Y));
+        var endTile = new Vector2i((int) MathF.Floor(localTo.X), (int) MathF.Floor(localTo.Y));
+
+        var stepX = Math.Sign(localDelta.X);
+        var stepY = Math.Sign(localDelta.Y);
+        var tDeltaX = stepX == 0 ? float.PositiveInfinity : MathF.Abs(1f / localDelta.X);
+        var tDeltaY = stepY == 0 ? float.PositiveInfinity : MathF.Abs(1f / localDelta.Y);
+        var nextBoundaryX = stepX > 0 ? currentTile.X + 1f : currentTile.X;
+        var nextBoundaryY = stepY > 0 ? currentTile.Y + 1f : currentTile.Y;
+        var tMaxX = stepX == 0 ? float.PositiveInfinity : (nextBoundaryX - localFrom.X) / localDelta.X;
+        var tMaxY = stepY == 0 ? float.PositiveInfinity : (nextBoundaryY - localFrom.Y) / localDelta.Y;
+
+        while (true)
+        {
+            if (TryUseOpeningTile(currentTile))
+            {
+                opening = selectedOpening;
+                return true;
+            }
+
+            if (currentTile == endTile)
+                break;
+
+            if (tMaxX < tMaxY)
+            {
+                currentTile += new Vector2i(stepX, 0);
+                tMaxX += tDeltaX;
+            }
+            else if (tMaxY < tMaxX)
+            {
+                currentTile += new Vector2i(0, stepY);
+                tMaxY += tDeltaY;
+            }
+            else
+            {
+                currentTile += new Vector2i(stepX, stepY);
+                tMaxX += tDeltaX;
+                tMaxY += tDeltaY;
+            }
         }
 
         if (hasFallbackOpening)
@@ -216,11 +265,6 @@ public abstract partial class CMUSharedZLevelsSystem
         }
 
         return false;
-    }
-
-    private bool IsZShotOpening(EntityUid mapUid, MapGridComponent grid, Vector2 position)
-    {
-        return CMUZLevelOpeningCache.IsOpeningTile(mapUid, grid, position, _map, TilDefMan);
     }
 }
 

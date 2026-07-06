@@ -1329,6 +1329,9 @@
   id: SpreaderIgnore
 
 - type: Tag
+  id: Stamp
+
+- type: Tag
   id: StationAi
 
 - type: Tag
@@ -1414,6 +1417,9 @@
 
 - type: Tag
   id: TrashBag
+
+- type: Tag
+  id: Tree
 
 - type: Tag
   id: Truncheon

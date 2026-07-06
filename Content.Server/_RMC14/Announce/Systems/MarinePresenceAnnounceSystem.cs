@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Linq;
 using Robust.Shared.Timing;
 using Content.Server._RMC14.Marines;
+using Content.Shared._RMC14.Marines;
 using Content.Shared.Roles;
 using Robust.Shared.Prototypes;
 using Content.Shared._RMC14.ARES;
@@ -17,7 +18,7 @@ namespace Content.Server._RMC14.Announce
 {
     public sealed partial class MarinePresenceAnnounceSystem : EntitySystem
     {
-        [Dependency] private ARESSystem _ares = default!;
+        [Dependency] private ARESCoreSystem _aresCore = default!;
         [Dependency] private MarineAnnounceSystem _marineAnnounce = default!;
         [Dependency] private SharedRankSystem _rankSystem = default!;
         [Dependency] private SquadSystem _squad = default!;
@@ -28,7 +29,10 @@ namespace Content.Server._RMC14.Announce
 
         public void AnnounceLateJoin(bool lateJoin, bool silent, EntityUid mob, string jobId, string jobName, JobPrototype jobPrototype)
         {
-            var ares = _ares.EnsureARES();
+            if (!_aresCore.TryGetMarineARES(out var ares) || ares == null)
+                return;
+
+            var aresUid = ares.Value.Owner;
             var fullRankName = _rankSystem.GetSpeakerFullRankName(mob) ?? Name(mob);
             var rankName = _rankSystem.GetSpeakerRankName(mob) ?? Name(mob);
 
@@ -36,11 +40,16 @@ namespace Content.Server._RMC14.Announce
             {
                 if (jobPrototype.JoinNotifyCrew)
                 {
-                    _marineAnnounce.AnnounceARESStaging(ares,
+                    string? announceToFaction = TryComp<MarineComponent>(mob, out var marineComp)
+                        ? marineComp.Faction
+                        : null;
+
+                    _marineAnnounce.AnnounceARESStaging(aresUid,
                         Loc.GetString("rmc-latejoin-arrival-announcement-special",
                         ("character", fullRankName)),
                         jobPrototype.LatejoinArrivalSound,
-                        null);
+                        null,
+                        announceToFaction);
                 }
                 else
                 {
@@ -78,7 +87,7 @@ namespace Content.Server._RMC14.Announce
 
                         departmentChannelFound = true;
 
-                        _marineAnnounce.AnnounceRadio(ares,
+                        _marineAnnounce.AnnounceRadio(aresUid,
                             Loc.GetString("rmc-latejoin-arrival-announcement",
                             ("character", rankName),
                             ("entity", mob),
@@ -89,7 +98,7 @@ namespace Content.Server._RMC14.Announce
                     // If no department channel found OR the player is the head of the department, send to CommonChannel
                     if (!departmentChannelFound || isHead)
                     {
-                        _marineAnnounce.AnnounceRadio(ares,
+                        _marineAnnounce.AnnounceRadio(aresUid,
                             Loc.GetString("rmc-latejoin-arrival-announcement",
                             ("character", rankName),
                             ("entity", mob),
@@ -102,7 +111,10 @@ namespace Content.Server._RMC14.Announce
 
         public void AnnounceEarlyLeave(Entity<CryostorageContainedComponent> ent, uint? recordId, EntityUid? station, string jobName)
         {
-            var ares = _ares.EnsureARES();
+            if (!_aresCore.TryGetMarineARES(out var ares) || ares == null)
+                return;
+
+            var aresUid = ares.Value.Owner;
             var rankName = _rankSystem.GetSpeakerRankName(ent.Owner) ?? Name(ent.Owner);
             JobPrototype? jobProto = null;
 
@@ -152,7 +164,7 @@ namespace Content.Server._RMC14.Announce
 
                     departmentChannelFound = true;
 
-                    _marineAnnounce.AnnounceRadio(ares,
+                    _marineAnnounce.AnnounceRadio(aresUid,
                         Loc.GetString("rmc-earlyleave-cryo-announcement",
                         ("character", rankName),
                         ("entity", ent.Owner),
@@ -163,7 +175,7 @@ namespace Content.Server._RMC14.Announce
                 // If no department channel found OR the player is the head of the department, send to CommonChannel
                 if (!departmentChannelFound || isHead)
                 {
-                    _marineAnnounce.AnnounceRadio(ares,
+                    _marineAnnounce.AnnounceRadio(aresUid,
                         Loc.GetString("rmc-earlyleave-cryo-announcement",
                         ("character", rankName),
                         ("entity", ent.Owner),
@@ -173,7 +185,7 @@ namespace Content.Server._RMC14.Announce
             }
             else
             {
-                _marineAnnounce.AnnounceRadio(ares,
+                _marineAnnounce.AnnounceRadio(aresUid,
                         Loc.GetString("rmc-earlyleave-cryo-announcement",
                         ("character", rankName),
                         ("entity", ent.Owner),

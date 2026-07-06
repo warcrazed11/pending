@@ -15,7 +15,7 @@ public sealed partial class CMUZLevelBlurOverlay : Overlay
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IEntityManager _entity = default!;
     [Dependency] private IConfigurationManager _config = default!;
-    private readonly ShaderInstance? _blurShader;
+    private ShaderInstance? _blurShader;
     private const float MaxBlurStrength = 2.0f;
 
     public override bool RequestScreenTexture => IsBlurEnabled();
@@ -26,7 +26,6 @@ public sealed partial class CMUZLevelBlurOverlay : Overlay
     public CMUZLevelBlurOverlay()
     {
         IoCManager.InjectDependencies(this);
-        _blurShader = _proto.Index(_zBlurShader).InstanceUnique();
     }
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
@@ -37,13 +36,19 @@ public sealed partial class CMUZLevelBlurOverlay : Overlay
         if (args.Viewport.Eye is not ScalingViewport.ZEye zeye)
             return false;
 
-        if (zeye.Depth >= 0)
+        if (!ShouldBlurPass(zeye))
             return false;
 
         if (args.MapId == MapId.Nullspace)
             return false;
 
         return true;
+    }
+
+    internal static bool ShouldBlurPass(ScalingViewport.ZEye zEye)
+    {
+        return zEye.Depth < 0 ||
+               zEye.Depth == 0 && zEye.BlurCurrentLevel;
     }
 
     private bool IsBlurEnabled()
@@ -67,13 +72,19 @@ public sealed partial class CMUZLevelBlurOverlay : Overlay
                 mapLight.AmbientLightColor.B);
         }
 
-        _blurShader?.SetParameter("SCREEN_TEXTURE", ScreenTexture);
-        _blurShader?.SetParameter("BLUR_COLOR", ambientColor);
-        _blurShader?.SetParameter("BLUR_RADIUS", Math.Clamp(_config.GetCVar(CMUZLevelsCVars.BlurStrength), 0f, MaxBlurStrength));
+        var blurShader = GetBlurShader();
+        blurShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+        blurShader.SetParameter("BLUR_COLOR", ambientColor);
+        blurShader.SetParameter("BLUR_RADIUS", Math.Clamp(_config.GetCVar(CMUZLevelsCVars.BlurStrength), 0f, MaxBlurStrength));
 
         var worldHandle = args.WorldHandle;
-        worldHandle.UseShader(_blurShader);
+        worldHandle.UseShader(blurShader);
         worldHandle.DrawRect(args.WorldBounds, Color.White);
         worldHandle.UseShader(null);
+    }
+
+    private ShaderInstance GetBlurShader()
+    {
+        return _blurShader ??= _proto.Index(_zBlurShader).InstanceUnique();
     }
 }

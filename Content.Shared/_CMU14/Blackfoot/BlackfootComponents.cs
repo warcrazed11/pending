@@ -78,10 +78,10 @@ public sealed partial class BlackfootFlightComponent : Component
     public TimeSpan StateStartedAt;
 
     [DataField, AutoNetworkedField]
-    public TimeSpan TakeoffDuration = TimeSpan.FromSeconds(23.66);
+    public TimeSpan TakeoffDuration = TimeSpan.FromSeconds(16.562);
 
     [DataField, AutoNetworkedField]
-    public TimeSpan LandingDuration = TimeSpan.FromSeconds(18);
+    public TimeSpan LandingDuration = TimeSpan.FromSeconds(9);
 
     [DataField, AutoNetworkedField]
     public Vector2i Footprint = new(3, 3);
@@ -112,6 +112,15 @@ public sealed partial class BlackfootFlightComponent : Component
 
     [DataField, AutoNetworkedField]
     public EntProtoId DownwashPrototype = "CMUBlackfootDownwash";
+
+    [DataField("vtolSpeedMultiplier"), AutoNetworkedField]
+    public float VTOLSpeedMultiplier = 1.25f;
+
+    [DataField, AutoNetworkedField]
+    public float FlightSpeedMultiplier = 1.6f;
+
+    [DataField, AutoNetworkedField]
+    public EntProtoId HitEffect = "RMCBruteSparks";
 }
 
 [RegisterComponent]
@@ -197,6 +206,13 @@ public sealed partial class BlackfootSoundComponent : Component
     public readonly HashSet<EntityUid> InteriorEngineLoopRecipients = new();
 }
 
+[RegisterComponent]
+public sealed partial class BlackfootGunshotComponent : Component
+{
+    [DataField]
+    public SoundSpecifier? Sound;
+}
+
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class BlackfootFuelPowerComponent : Component
 {
@@ -226,6 +242,9 @@ public sealed partial class BlackfootFuelPowerComponent : Component
 
     [DataField, AutoNetworkedField]
     public float MinimumTakeoffFuel = 30f;
+
+    [DataField, AutoNetworkedField]
+    public float FuelLeakDrain = 2.5f;
 
     [DataField, AutoNetworkedField]
     public bool CrashOnZeroFuel = true;

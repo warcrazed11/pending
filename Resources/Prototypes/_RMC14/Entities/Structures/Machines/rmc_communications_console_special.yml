@@ -45,6 +45,8 @@
   - type: OverwatchConsole
     canOrbitalBombardment: false
     group: WeYa
+  - type: TacticalMapComputer
+    faction: MARINES
 
 - type: entity
   parent: RMCOverwatchConsoleWeYa
@@ -64,7 +66,7 @@
   - type: TacticalMapComputer
     faction: govfor
   - type: OverwatchConsole
-    canOrbitalBombardment: false
+    canOrbitalBombardment: true
     group: GOVFOR
 
 - type: entity

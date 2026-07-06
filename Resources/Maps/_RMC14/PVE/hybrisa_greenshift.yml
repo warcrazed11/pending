@@ -94570,7 +94570,7 @@ entities:
     - type: Transform
       pos: -15.5,-147.5
       parent: 1
-- proto: CMEncryptionKeyWEYA
+- proto: CMEncryptionKeyWEYU
   entities:
   - uid: 4698
     components:
@@ -101478,7 +101478,7 @@ entities:
     - type: Transform
       pos: -126.433876,-60.25896
       parent: 1
-- proto: CMM2132Machete
+- proto: AU14ToolMachete
   entities:
   - uid: 5028
     components:
@@ -186367,7 +186367,7 @@ entities:
     - type: Transform
       pos: -148.59567,-32.250698
       parent: 1
-- proto: RMCPickaxe
+- proto: AU14ToolPickaxe
   entities:
   - uid: 20465
     components:
@@ -218449,7 +218449,7 @@ entities:
     - type: Transform
       pos: -87.5,-127.5
       parent: 1
-- proto: RMCSensorTower
+- proto: AU14SensorTower
   entities:
   - uid: 25517
     components:

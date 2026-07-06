@@ -19,6 +19,17 @@
   - type: InteractionOutline
   - type: Corrodible
     isCorrodible: false
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 60
+        mask:
+        - MachineMask
+        layer:
+        - LowImpassable
   - type: ApcPowerReceiver
     powerLoad: 0
     needsPower: false # TODO RMC14
@@ -77,11 +88,28 @@
   id: RMCGroundsideOperationsConsoleGovfor
   suffix: Govfor
   components:
+  - type: MarineCommunicationsComputer
+    faction: govfor
   - type: OverwatchConsole
     canMessageSquad: false
     group: GOVFOR
   - type: TacticalMapComputer
     faction: govfor
+
+- type: entity
+  parent: RMCGroundsideOperationsConsole
+  id: RMCGroundsideOperationsConsoleOpfor
+  suffix: Opfor
+  components:
+  - type: MarineCommunicationsComputer
+    faction: opfor
+  - type: OverwatchConsole
+    canMessageSquad: false
+    group: OPFOR
+  - type: TacticalMapComputer
+    faction: opfor
+  - type: AccessReader
+    access: [ [ "AU14AccessOpforCommand" ] ]
 
 - type: entity
   parent: RMCCommunicationsConsoleBase
@@ -136,6 +164,9 @@
       RMCSkillOverwatch: 1
   - type: OverwatchConsole
   - type: SupplyDropComputer
+  - type: TacticalMapComputer
+    skill: RMCSkillOverwatch
+    skillLevel: 1
 
 
 - type: entity
